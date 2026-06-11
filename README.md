@@ -35,7 +35,9 @@ This repository contains practical, job-relevant projects I have built to streng
 ## Contact
 
 - LinkedIn: [linkedin.com/in/prides-tumasang-fru-maboh](https://www.linkedin.com/in/prides-tumasang-fru-maboh)
-- Email: fruprides@outlook.com
+- Credly: https://www.credly.com/users/prides-tumasang-fru-maboh/
+- Email: fruprides@outlook.com /fruprides@yahoo.com
+- +44 07487566116
 
 ---
 
