@@ -2,20 +2,22 @@
 
 **Name:** Prides Fru  
 **Location:** Ashford, Kent, UK  
-**Target Roles:** IT Support Analyst | Desktop Support Engineer | 2nd Line Support
+**Target Roles:** IT Support Analyst | Desktop Support Engineer | 2nd / 3rd Line Support
 
 ## About This Portfolio
 
-This repository contains practical, job-relevant projects I have built to strengthen my skills in modern workplace technologies. My goal is to demonstrate hands-on ability in Microsoft 365 endpoint management, automation, identity, and security — skills that are in high demand for IT Support and Desktop Support roles in the UK.
+This repository contains practical, hands-on projects I have built to strengthen my skills in modern workplace technologies. My goal is to demonstrate real technical ability in Microsoft 365 endpoint management, automation, identity, and security — skills that are highly relevant for IT Support and Desktop Support roles in the UK.
+
+I am currently transitioning back into IT support after gaining valuable experience in a customer-facing role. I hold CompTIA Secure Infrastructure Specialist (A+, Network+, Security+) and ITIL v5 Foundation certifications, and I am actively building practical skills through projects to support my applications for sponsored IT roles.
 
 ## Projects
 
-| Project | Focus Area | Status |
-|---------|------------|--------|
-| 01 - Intune + Autopilot Lab | Endpoint Management & Deployment | In Progress |
-| 02 - PowerShell Scripting | Automation & Troubleshooting | Not Started |
-| 03 - Entra ID Conditional Access + MFA | Identity & Security | Not Started |
-| 04 - JAMF / macOS Fundamentals | Apple Device Management | Optional |
+| Project                              | Focus Area                          | Status        |
+|--------------------------------------|-------------------------------------|---------------|
+| 01 - Intune + Autopilot Lab          | Endpoint Management & Deployment    | In Progress   |
+| 02 - PowerShell Scripting            | Automation & Troubleshooting        | Not Started   |
+| 03 - Entra ID Conditional Access + MFA | Identity & Security               | Not Started   |
+| 04 - JAMF / macOS Fundamentals       | Apple Device Management             | Optional      |
 
 ## Why This Portfolio?
 
@@ -34,10 +36,10 @@ This repository contains practical, job-relevant projects I have built to streng
 
 ## Contact
 
-- LinkedIn: [linkedin.com/in/prides-tumasang-fru-maboh](https://www.linkedin.com/in/prides-tumasang-fru-maboh)
-- Credly: https://www.credly.com/users/prides-tumasang-fru-maboh/
-- Email: fruprides@outlook.com /fruprides@yahoo.com
-- +44 07487566116
+- **LinkedIn:** [linkedin.com/in/prides-tumasang-fru-maboh](https://www.linkedin.com/in/prides-tumasang-fru-maboh)
+- **Credly:** [credly.com/users/prides-tumasang-fru-maboh](https://www.credly.com/users/prides-tumasang-fru-maboh)
+- **Email:** fruprides@outlook.com
+- **Phone:** +44 7487 566116
 
 ---
 
