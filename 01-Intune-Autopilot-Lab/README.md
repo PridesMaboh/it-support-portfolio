@@ -1,39 +1,52 @@
-# 01 - Intune + Autopilot Lab
+# Intune + Autopilot Lab
+
+**Project Goal:**  
+Build a realistic Microsoft Intune and Windows Autopilot lab environment to demonstrate modern endpoint management, device enrolment, and configuration capabilities.
 
 ## Project Overview
 
-This project demonstrates practical skills in Microsoft Intune and Windows Autopilot for modern endpoint management and device deployment. The goal is to build a hands-on lab environment that reflects real-world IT Support scenarios.
+This project simulates a real-world scenario where an organisation wants to move from traditional imaging to a modern cloud-native deployment using Microsoft Intune and Autopilot.
 
-## Objectives
+### What This Project Will Demonstrate
+- Device enrolment using Windows Autopilot
+- Configuration of Intune policies and compliance settings
+- Application deployment and management
+- Security baselines and endpoint protection
+- Documentation and operational processes suitable for 2nd/3rd line support roles
 
-- Understand Intune device enrolment methods
-- Configure device configuration profiles
-- Implement Autopilot deployment scenarios
-- Apply compliance and security policies
-- Document the full process for IT Support use cases
+## Lab Requirements & Environment
 
-## Lab Scope (Planned)
+*(You will fill this section during Day 2)*
 
-- Device enrolment using Autopilot
-- Configuration profiles (device restrictions, settings)
-- Compliance policies
-- Application deployment (Win32 apps)
-- Conditional Access integration (basic)
+- Licensing requirements
+- Recommended tenant/environment
+- Technical requirements (device, OS, etc.)
+- Tools and portals needed
 
-## Tools & Technologies
+## Project Scope
 
-- Microsoft Intune
+- In scope: ...
+- Out of scope: ...
+
+## Tools & Technologies Used
+
+- Microsoft Intune / Microsoft Endpoint Manager
 - Windows Autopilot
 - Microsoft Entra ID (Azure AD)
 - Windows 11
-- PowerShell (for automation where applicable)
+- PowerShell (where applicable)
 
-## Status
+## Current Status
 
-**Status:** In Progress  
-**Started:** June 2026  
-**Last Updated:** [Update this date as you progress]
+| Phase              | Status     | Notes                          |
+|--------------------|------------|--------------------------------|
+| Project Setup      | In Progress| README structure created       |
+| Research & Planning| Not Started| -                              |
+| Lab Build          | Not Started| -                              |
+| Documentation      | Not Started| -                              |
 
-## Notes & Research
+## Next Steps
 
-*(This section will be updated during Week 1 and beyond)*
+1. Complete research on licensing and environment options
+2. Define clear lab scenarios
+3. Set up test environment
