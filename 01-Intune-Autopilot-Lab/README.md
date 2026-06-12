@@ -16,12 +16,27 @@ This project simulates a real-world scenario where an organisation wants to move
 
 ## Lab Requirements & Environment
 
-*(You will fill this section during Day 2)*
+### 1. Licensing Requirements
+- What license is needed for Intune + Autopilot?
+- Can we use a free Microsoft 365 Developer tenant?
+- What are the limitations of the Developer tenant?
 
-- Licensing requirements
-- Recommended tenant/environment
-- Technical requirements (device, OS, etc.)
-- Tools and portals needed
+### 2. Recommended Lab Environment
+- Best option for this project (Developer tenant, trial, or other?)
+- How to create/get access
+
+### 3. Technical Requirements
+- Device needed (physical Windows 11 device or VM?)
+- Operating System version
+- Any other hardware/software requirements
+
+### 4. Tools & Accounts Needed
+- Key Microsoft portals to use
+- Any PowerShell modules or extra tools
+
+### 5. Known Limitations & Challenges
+- Main limitations of the lab setup
+- Things to be careful about
 
 ## Project Scope
 
