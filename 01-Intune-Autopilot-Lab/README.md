@@ -18,7 +18,20 @@ This project simulates a real-world scenario where an organisation wants to move
 
 ### 1. Licensing Requirements
 - What license is needed for Intune + Autopilot?
+-       To use Windows Autopilot with Microsoft Intune, you need Microsoft Intune and Azure AD Premium P1 at minimum, typically included in Microsoft 365 Business Premium, E3, or E5 subscriptions.
 - Can we use a free Microsoft 365 Developer tenant?
+-       Yes, you can use a free Microsoft 365 Developer tenant through the Microsoft 365 Developer Program, which provides a renewable E5 subscription for development and testing purposes.
+-   
+Microsoft 365 Developer Program
+The Microsoft 365 Developer Program offers a sandbox environment specifically for developers to build, test, and explore Microsoft 365 features like Teams apps, SharePoint, Power Platform, Microsoft Graph, and Intune.
+
+Benefits of the Free Developer Tenant
+  Microsoft 365 E5 subscription with 25 user licenses
+  Access to Office 365 apps, Microsoft Graph, Power Apps, and Microsoft Power Automate
+  Azure AD Premium P2 features and Microsoft Intune licenses for testing device management
+  Preconfigured sandbox with optional sample data packs
+  Designed strictly for development, not production use 
+  
 - What are the limitations of the Developer tenant?
 
 ### 2. Recommended Lab Environment
