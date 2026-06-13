@@ -37,11 +37,6 @@ Benefits of the Free Developer Tenant
 ### 2. Recommended Lab Environment
 - Best option for this project: Microsoft 365 Developer Tenant
 
-  Option,Pros,Cons,Recommendation
-Microsoft 365 Developer Tenant,"Free, renewable (if active), includes E5 licenses with full Intune + Autopilot + Entra ID P2","Must stay active (sign in regularly), max 25 users",Best choice
-Intune / M365 Trial,"Easy to start, full features",Expires after 30 days,Good for very short tests
-Personal / Work Tenant,Already exists,Risk of mixing lab with real data,Avoid
-
 - How to create/get access to Microsoft 365 Developer Program tenant (free E5 subscription)
 I went to: https://developer.microsoft.com/microsoft-365/dev-program
 Click “Join” or “Sign in”.
