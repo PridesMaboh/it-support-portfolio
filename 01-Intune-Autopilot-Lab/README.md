@@ -38,7 +38,7 @@ Benefits of the Free Developer Tenant
 - Best option for this project: Microsoft 365 Developer Tenant
 
 - How to create/get access to Microsoft 365 Developer Program tenant (free E5 subscription)
-I went to: https://developer.microsoft.com/microsoft-365/dev-program
+Go to: https://developer.microsoft.com/microsoft-365/dev-program
 Click “Join” or “Sign in”.
 Sign in with a personal Microsoft account (e.g., Outlook.com / Hotmail) or a new one.
 Complete the short registration form.
