@@ -31,6 +31,7 @@ Benefits of the Free Developer Tenant
   Designed strictly for development, not production use 
   
 - What are the limitations of the Developer tenant?
+  
     Microsoft has restricted the creation of free Microsoft 365 developer tenant to users with active Visual Studio Enterprise subscriptions. This change was made to enhance security and prevent misuse of test tenants. Users who do not have a Visual Studio Enterprise subscription can no longer create a Microsoft 365 developer subscription. 
 
 ### 2. Recommended Lab Environment
