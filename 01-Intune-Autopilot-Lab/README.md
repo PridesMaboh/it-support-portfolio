@@ -35,8 +35,31 @@ Benefits of the Free Developer Tenant
     Microsoft has restricted the creation of free Microsoft 365 developer tenant to users with active Visual Studio Enterprise subscriptions. This change was made to enhance security and prevent misuse of test tenants. Users who do not have a Visual Studio Enterprise subscription can no longer create a Microsoft 365 developer subscription. 
 
 ### 2. Recommended Lab Environment
-- Best option for this project (Developer tenant, trial, or other?)
-- How to create/get access
+- Best option for this project: Microsoft 365 Developer Tenant
+
+  Option,Pros,Cons,Recommendation
+Microsoft 365 Developer Tenant,"Free, renewable (if active), includes E5 licenses with full Intune + Autopilot + Entra ID P2","Must stay active (sign in regularly), max 25 users",Best choice
+Intune / M365 Trial,"Easy to start, full features",Expires after 30 days,Good for very short tests
+Personal / Work Tenant,Already exists,Risk of mixing lab with real data,Avoid
+
+- How to create/get access to Microsoft 365 Developer Program tenant (free E5 subscription)
+I went to: https://developer.microsoft.com/microsoft-365/dev-program
+Click “Join” or “Sign in”.
+Sign in with a personal Microsoft account (e.g., Outlook.com / Hotmail) or a new one.
+Complete the short registration form.
+After joining the Developer Program, go to your Dashboard and look for the button “Set up E5 subscription” (or similar).
+Follow the prompts to provision the tenant.
+
+Important Notes (Current Reality):
+
+Not everyone gets the E5 sandbox automatically anymore. You may need a Visual Studio Professional or Enterprise subscription to qualify easily.
+If the free E5 option is not available, alternatives are:
+Microsoft 365 E3 trial (30 days, renewable)
+Buy a cheap Microsoft 365 Business Premium month-to-month for the lab
+
+
+Recommendation for you:
+Try signing up with the Developer Program first using a new or clean personal Microsoft account. Let me know what happens (e.g. if you see the “Set up E5 subscription” button or get blocked).
 
 ### 3. Technical Requirements
 - Device needed (physical Windows 11 device or VM?)
