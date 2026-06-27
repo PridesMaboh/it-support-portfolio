@@ -16,7 +16,7 @@ Many IT support roles in London and the South East — particularly in media, fi
 - A physical Mac (even an older model running macOS Ventura or Sonoma)
 - A Mac VM (VMware Fusion or Parallels on Apple Silicon; UTM for M-series Macs)
 
-**macOS version tested:** macOS Sonoma 14.x
+**Target macOS version:** macOS Sonoma 14.x (Ventura 13.x also supported)
 
 ---
 

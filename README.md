@@ -8,15 +8,15 @@
 
 This repository contains practical, hands-on projects I have built to strengthen my skills in modern workplace technologies. My goal is to demonstrate real technical ability in Microsoft 365 endpoint management, automation, identity, and security — skills that are highly relevant for IT Support and Desktop Support roles in the UK.
 
-I am currently transitioning back into IT support after gaining valuable experience in a customer-facing role. I hold CompTIA Secure Infrastructure Specialist (A+, Network+, Security+) and ITIL v5 Foundation certifications. I am actively building practical skills through projects to support my applications for sponsored IT roles.
+I am currently transitioning back into IT support after gaining valuable experience in a customer-facing role. I hold CompTIA Secure Infrastructure Specialist (A+, Network+, Security+) and ITIL 4 Foundation certifications. I am actively building practical skills through projects to support my applications for sponsored IT roles.
 
 ## Projects
 
 | Project                              | Focus Area                          | Status        |
 |--------------------------------------|-------------------------------------|---------------|
 | 01 - Intune + Autopilot Lab          | Endpoint Management & Deployment    | In Progress   |
-| 02 - PowerShell Scripting            | Automation & Troubleshooting        | Not Started   |
-| 03 - Entra ID Conditional Access + MFA | Identity & Security               | Not Started   |
+| 02 - PowerShell Scripting            | Automation & Troubleshooting        | In Progress   |
+| 03 - Entra ID Conditional Access + MFA | Identity & Security               | In Progress   |
 | 04 - JAMF / macOS Fundamentals       | Apple Device Management             | Optional      |
 
 ## Why This Portfolio?

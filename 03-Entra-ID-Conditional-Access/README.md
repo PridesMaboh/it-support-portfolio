@@ -71,13 +71,15 @@ Identity and Conditional Access come up frequently in IT support interviews beca
 ### Policy 4: Sign-in Risk Policy (Entra ID Protection)
 **What it does:** Automatically requires MFA or blocks access when Entra ID detects a risky sign-in (e.g., sign-in from an unusual location or anonymous IP).
 
-**Settings:**
+> **Licence note:** Full risk-based Conditional Access requires **Entra ID P2** (Microsoft Entra ID Protection). The Business Premium trial used in this lab includes P1 only. Policy 4 is documented here as a design exercise and interview reference — it cannot be fully configured in the P1 trial. To test this in practice, an Entra ID P2 or Microsoft 365 E5 trial would be required.
+
+**Settings (planned):**
 - Users: All users (exclude `CA-Exclude`)
 - Cloud apps: All cloud apps
 - Conditions: Sign-in risk = Medium or High
 - Grant: Require MFA (Medium risk) / Block (High risk)
 
-**Why it matters:** Demonstrates understanding of risk-based authentication — a step beyond basic Conditional Access. Shows ability to use intelligence-driven security controls.
+**Why it matters:** Demonstrates understanding of risk-based authentication — a step beyond basic Conditional Access. Shows ability to use intelligence-driven security controls, and shows awareness of Microsoft's licence tiers.
 
 ---
 
@@ -106,10 +108,10 @@ Identity and Conditional Access come up frequently in IT support interviews beca
    - Reference the Intune compliance policy from Project 01
    - Test by signing into Intune admin center as an admin user
 
-6. **Create Policy 4: Sign-in Risk**
-   - Enable Entra ID Protection (included in Business Premium)
-   - Configure User Risk and Sign-in Risk policies
-   - Use the Tor Browser or VPN to simulate a risky sign-in for testing
+6. **Policy 4: Sign-in Risk (requires Entra ID P2 — design exercise only)**
+   - Entra ID Protection is not included in the Business Premium P1 trial
+   - Document the intended policy configuration for reference and interview preparation
+   - If a P2 trial is available: enable Entra ID Protection, configure sign-in risk policy, use the Tor Browser to simulate a risky sign-in for testing
 
 7. **Review sign-in logs**
    - Check Entra ID sign-in logs to confirm policies are applying as expected
@@ -126,9 +128,8 @@ Identity and Conditional Access come up frequently in IT support interviews beca
 - [ ] Policy 2: Block Legacy Auth — configuration screenshot
 - [ ] Policy 2: Block confirmed in sign-in logs (failure reason = "blocked by CA policy")
 - [ ] Policy 3: Admin policy configuration screenshot
-- [ ] Policy 4: Risk policy configuration
-- [ ] Entra ID Protection dashboard screenshot
-- [ ] Sign-in log entry showing risk-based MFA triggered
+- [ ] Policy 4: Design documentation (P2 required for live configuration — see licence note above)
+- [ ] Entra ID Protection dashboard screenshot (if P2 trial available)
 
 Store screenshots in `assets/03-entra-ca/` and reference them inline in this README.
 
