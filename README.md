@@ -8,7 +8,7 @@
 
 This repository contains practical, hands-on projects I have built to strengthen my skills in modern workplace technologies. My goal is to demonstrate real technical ability in Microsoft 365 endpoint management, automation, identity, and security — skills that are highly relevant for IT Support and Desktop Support roles in the UK.
 
-I am currently transitioning back into IT support after gaining valuable experience in a customer-facing role. I hold CompTIA Secure Infrastructure Specialist (A+, Network+, Security+) and ITIL 4 Foundation certifications. I am actively building practical skills through projects to support my applications for sponsored IT roles.
+I am currently transitioning back into IT support after gaining valuable experience in a customer-facing role. I hold CompTIA Secure Infrastructure Specialist (A+, Network+, Security+) and ITIL Foundation v5 certifications. I am actively building practical skills through projects to support my applications for sponsored IT roles.
 
 ## Projects
 
