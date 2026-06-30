@@ -1,0 +1,1418 @@
+# Intune + Autopilot Lab — Complete Step-by-Step Walkthrough
+
+**Author:** Prides Maboh | IT Support Portfolio  
+**Repo:** `PridesMaboh/it-support-portfolio → 01-Intune-Autopilot-Lab`  
+**Scenario:** New Starter Device Provisioning — TechCorp UK
+
+---
+
+## Table of Contents
+
+1. [Before You Start — Pre-Flight Checklist](#1-before-you-start--pre-flight-checklist)
+2. [Phase 0 — Tools & Downloads](#2-phase-0--tools--downloads)
+3. [Phase 1 — M365 Business Premium Trial Setup](#3-phase-1--m365-business-premium-trial-setup)
+4. [Phase 2 — Build the Windows 11 VM in Hyper-V](#4-phase-2--build-the-windows-11-vm-in-hyper-v)
+5. [Phase 3 — Extract Hardware Hash & Register with Autopilot](#5-phase-3--extract-hardware-hash--register-with-autopilot)
+6. [Phase 4 — Create the Autopilot Deployment Profile](#6-phase-4--create-the-autopilot-deployment-profile)
+7. [Phase 5 — Configure the Enrollment Status Page (ESP)](#7-phase-5--configure-the-enrollment-status-page-esp)
+8. [Phase 6 — Create Configuration Profiles](#8-phase-6--create-configuration-profiles)
+9. [Phase 7 — Create a Compliance Policy](#9-phase-7--create-a-compliance-policy)
+10. [Phase 8 — Package & Deploy an Application](#10-phase-8--package--deploy-an-application)
+11. [Phase 9 — End-to-End Test (The Full Run)](#11-phase-9--end-to-end-test-the-full-run)
+12. [Phase 10 — Evidence Capture & GitHub Upload](#12-phase-10--evidence-capture--github-upload)
+13. [Troubleshooting Reference](#13-troubleshooting-reference)
+14. [Interview Talking Points](#14-interview-talking-points)
+
+---
+
+## 1. Before You Start — Pre-Flight Checklist
+
+### 1.1 Check Your Host Machine
+
+Your physical Windows PC is the **host**. The VM runs inside it. You need:
+
+| Requirement | Minimum | How to check |
+|---|---|---|
+| Windows edition | Pro, Enterprise, or Education (NOT Home) | Start → Settings → System → About → "Windows specification" |
+| RAM | 16 GB recommended (8 GB absolute minimum) | Task Manager → Performance → Memory |
+| Free disk space | 60 GB | File Explorer → This PC |
+| CPU virtualisation | Enabled in BIOS/UEFI | Task Manager → Performance → CPU → "Virtualization: Enabled" |
+| TPM on host | Not required (VM has its own vTPM) | Not needed |
+
+> **If your edition is Windows Home:** Hyper-V is not available. You have two options: (a) upgrade the licence, or (b) use VMware Workstation Pro (now free) which also supports vTPM. The steps below use Hyper-V; notes for VMware differences are included where relevant.
+
+### 1.2 Check and Enable Hyper-V
+
+**Run this in PowerShell as Administrator on your host machine:**
+
+```powershell
+# Check if Hyper-V is already installed
+Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V
+```
+
+Look at the **State** field in the output:
+- `Enabled` → you are ready, skip the next command
+- `Disabled` → run the command below
+
+```powershell
+# Enable Hyper-V (requires restart)
+Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All
+```
+
+After running this, Windows will ask you to restart. Do so.
+
+**After restarting, verify Hyper-V Manager is present:**  
+Start → search "Hyper-V Manager" → it should appear as an app.
+
+📸 **SCREENSHOT:** `00-hyperv-manager-open.png` — Hyper-V Manager window open, showing your host machine name in the left panel.
+
+### 1.3 Plan Your Timing
+
+The M365 Business Premium trial is **30 days**. You should start the trial only when you are ready to run the lab from start to finish. Project 03 (Conditional Access) uses the same tenant, so plan both projects inside the same 30-day window.
+
+**Recommended schedule:**
+- Day 1: Phase 0 (downloads) + Phase 1 (trial setup) + Phase 2 (VM build)
+- Day 2: Phase 3 (hardware hash) + Phase 4-7 (policies) + Phase 8 (app packaging)
+- Day 3: Phase 9 (end-to-end test) + Phase 10 (evidence & documentation)
+
+---
+
+## 2. Phase 0 — Tools & Downloads
+
+Do all of this **before** starting the trial, so you are not burning trial days on downloads.
+
+### 2.1 Download the Windows 11 ISO
+
+1. Go to: https://www.microsoft.com/en-gb/software-download/windows11
+2. Under **"Download Windows 11 Disk Image (ISO) for x64 devices"**, select **Windows 11 (multi-edition ISO for x64 devices)**
+3. Choose language: **English (United Kingdom)**
+4. Click **64-bit Download**
+5. Save the ISO somewhere easy to find, e.g. `C:\ISOs\Win11.iso`
+
+> The ISO is approximately 6.5 GB. Download it now on a good connection.
+
+### 2.2 Download the Win32 Content Prep Tool
+
+This tool packages `.exe` or `.msi` installers into the `.intunewin` format Intune requires.
+
+1. Go to: https://github.com/microsoft/Microsoft-Win32-Content-Prep-Tool
+2. Click **Releases** on the right side of the page
+3. Download `IntuneWinAppUtil.exe` from the latest release
+4. Save it to: `C:\Tools\IntuneWinAppUtil.exe` (create the `Tools` folder if needed)
+
+### 2.3 Download 7-Zip (as the app you will deploy)
+
+1. Go to: https://www.7-zip.org/download.html
+2. Download the **64-bit Windows installer** — the file is named something like `7z2301-x64.exe`
+3. Save it to: `C:\Tools\7zip\7z2301-x64.exe` (create the `7zip` subfolder)
+
+> Do NOT install it on your host machine — you only need the installer file for packaging.
+
+### 2.4 Install the Get-WindowsAutopilotInfo Script
+
+**Run this in PowerShell as Administrator on your host machine:**
+
+```powershell
+# Step 1: Install the NuGet package provider (required to install scripts from PSGallery)
+Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+
+# Step 2: Trust the PowerShell Gallery
+Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+
+# Step 3: Install the Autopilot info script
+Install-Script -Name Get-WindowsAutopilotInfo -Force
+```
+
+**Verify the installation:**
+
+```powershell
+Get-Command Get-WindowsAutopilotInfo
+```
+
+Expected output: a line showing `Get-WindowsAutopilotInfo` with `Script` as the CommandType.
+
+📸 **SCREENSHOT:** `00-autopilotinfo-installed.png` — PowerShell window showing the `Get-Command` output confirming the script is installed.
+
+### 2.5 Install the Microsoft Graph PowerShell SDK (for Phase 3 online registration)
+
+```powershell
+# Install Microsoft Graph modules needed for Autopilot online registration
+Install-Module -Name Microsoft.Graph.DeviceManagement.Enrollment -Force -AllowClobber
+Install-Module -Name Microsoft.Graph.Authentication -Force -AllowClobber
+```
+
+This may take several minutes. Wait until the prompt returns.
+
+---
+
+## 3. Phase 1 — M365 Business Premium Trial Setup
+
+### 3.1 Sign Up for the Trial
+
+1. Open a browser in **InPrivate/Incognito** mode (important — avoids conflicts with any existing Microsoft accounts)
+2. Go to: https://www.microsoft.com/en-gb/microsoft-365/business/compare-all-plans
+3. Find **Microsoft 365 Business Premium** and click **Try free for one month**
+4. When prompted, choose **"Set up account"**
+5. Fill in the form:
+   - Name: your real name
+   - Work email: use a personal email (e.g. Gmail) — Microsoft will create a new tenant, not use your existing email
+   - Company name: `TechCorp UK` (or anything — this is your lab tenant name)
+   - Company size: 1 person
+   - Country: United Kingdom
+6. Choose a username for your admin account. This will be in the format:  
+   `admin@<yourchosenname>.onmicrosoft.com`  
+   Example: `admin@techcorpuk2024.onmicrosoft.com`  
+   Write this down — it is your **Global Administrator** account.
+7. Set a strong password and write it down
+8. Complete phone verification
+9. Do NOT purchase — confirm you want the free trial
+
+📸 **SCREENSHOT:** `01-m365-trial-confirmation.png` — The Microsoft 365 admin centre home page after trial signup, showing your tenant name and the trial expiry notice at the top.
+
+### 3.2 Verify Intune and Entra ID P1 Licences
+
+1. In the Microsoft 365 admin centre (https://admin.microsoft.com), go to:  
+   **Billing → Your products**
+2. Confirm **Microsoft 365 Business Premium** is listed and active
+3. Click on it and confirm the following services are included:
+   - Microsoft Intune
+   - Azure Active Directory Premium P1 (shown as "Entra ID P1")
+
+📸 **SCREENSHOT:** `01-licences-active.png` — Your products page showing Business Premium active with the included services listed.
+
+### 3.3 Navigate to the Intune Admin Centre
+
+1. Go to: https://intune.microsoft.com
+2. Sign in with your admin account (`admin@<tenant>.onmicrosoft.com`)
+3. You should see the **Microsoft Intune admin centre** dashboard
+
+📸 **SCREENSHOT:** `01-intune-dashboard.png` — The Intune admin centre home screen, showing your tenant name in the top-right corner.
+
+### 3.4 Navigate to the Entra ID Admin Centre
+
+1. Go to: https://entra.microsoft.com
+2. Sign in with the same admin account
+3. Confirm you can see the Entra ID overview
+
+📸 **SCREENSHOT:** `01-entra-dashboard.png` — The Microsoft Entra admin centre overview page.
+
+### 3.5 Create a Test User (the "New Starter")
+
+This user represents the employee who will receive the Autopilot-provisioned device.
+
+1. In the **Microsoft 365 admin centre** (https://admin.microsoft.com), go to:  
+   **Users → Active users → Add a user**
+2. Fill in:
+   - First name: `Test`
+   - Last name: `Newstarter`
+   - Display name: `Test Newstarter`
+   - Username: `newstarter@<tenant>.onmicrosoft.com`
+   - Password: set a temporary password (write it down)
+   - Uncheck "Require this user to change their password when they first sign in" (makes testing easier)
+3. On the **Licences** step, assign: **Microsoft 365 Business Premium**
+4. On the **Optional settings** step, leave defaults
+5. Click **Finish adding**
+
+📸 **SCREENSHOT:** `01-test-user-created.png` — Active users list showing `Test Newstarter` with the Business Premium licence assigned.
+
+### 3.6 Create Security Groups
+
+You will use two groups: one for the Autopilot device, one for the user.
+
+**Group 1 — for the device:**
+
+1. Go to: https://entra.microsoft.com → **Groups → All groups → New group**
+2. Settings:
+   - Group type: **Security**
+   - Group name: `Autopilot-Devices`
+   - Group description: `Devices registered for Windows Autopilot deployment`
+   - Membership type: **Assigned**
+3. Do **not** add members yet (the device doesn't exist yet)
+4. Click **Create**
+
+**Group 2 — for the user:**
+
+1. **New group** again
+2. Settings:
+   - Group type: **Security**
+   - Group name: `Autopilot-Users`
+   - Group description: `Users receiving Autopilot-provisioned devices`
+   - Membership type: **Assigned**
+3. Add member: `Test Newstarter`
+4. Click **Create**
+
+📸 **SCREENSHOT:** `01-security-groups.png` — Entra ID Groups list showing both `Autopilot-Devices` and `Autopilot-Users` groups.
+
+---
+
+## 4. Phase 2 — Build the Windows 11 VM in Hyper-V
+
+### 4.1 Open Hyper-V Manager
+
+Start → search "Hyper-V Manager" → open it.  
+In the left panel, click your **host computer name**.
+
+### 4.2 Create the Virtual Switch (if not already present)
+
+Before creating the VM, you need a virtual network switch.
+
+1. In the right **Actions** panel, click **Virtual Switch Manager**
+2. Select **External** → click **Create Virtual Switch**
+3. Name it: `External Network`
+4. Under **Connection type**, select **External network** and choose your host's active network adapter from the dropdown
+5. Click **OK** → click **Yes** on the warning about network disruption
+
+📸 **SCREENSHOT:** `02-virtual-switch.png` — Virtual Switch Manager showing the External Network switch configured.
+
+### 4.3 Create the Windows 11 VM
+
+1. In the **Actions** panel, click **New → Virtual Machine**
+2. Work through the wizard:
+
+**Page 1 — Name and Location:**
+- Name: `W11-Autopilot-Test`
+- Leave location as default
+
+**Page 2 — Specify Generation:**
+- Select **Generation 2** ← Critical. Autopilot and vTPM require Gen 2.
+
+**Page 3 — Assign Memory:**
+- Startup memory: `4096 MB` (4 GB minimum; 8192 MB preferred if host has 16 GB RAM)
+- Check **Use Dynamic Memory for this virtual machine**
+
+**Page 4 — Configure Networking:**
+- Connection: select `External Network` (the switch you just created)
+
+**Page 5 — Connect Virtual Hard Disk:**
+- Select **Create a virtual hard disk**
+- Name: `W11-Autopilot-Test.vhdx`
+- Size: `64 GB`
+
+**Page 6 — Installation Options:**
+- Select **Install an operating system from a bootable image file**
+- Browse to: `C:\ISOs\Win11.iso`
+
+3. Click **Finish**
+
+📸 **SCREENSHOT:** `02-vm-created.png` — Hyper-V Manager showing the `W11-Autopilot-Test` VM in the Virtual Machines list.
+
+### 4.4 Enable the Virtual TPM (vTPM) — Critical Step
+
+Windows 11 requires TPM 2.0. Your VM needs a virtual TPM. This is only possible on Generation 2 VMs.
+
+1. In Hyper-V Manager, **right-click** the `W11-Autopilot-Test` VM → **Settings**
+2. In the left panel, click **Security**
+3. Check the box: **Enable Trusted Platform Module**
+4. Also check: **Encrypt state and virtual machine migration traffic** (optional but good practice)
+5. Click **OK**
+
+📸 **SCREENSHOT:** `02-vtpm-enabled.png` — VM Settings window → Security section, showing "Enable Trusted Platform Module" is checked.
+
+### 4.5 Adjust Additional VM Settings
+
+Still in the VM Settings window:
+
+1. **Processor:**
+   - Click **Processor** in the left panel
+   - Set **Number of virtual processors** to `2` (improves performance)
+
+2. **Checkpoints:**
+   - Click **Checkpoints**
+   - Change type to **Standard checkpoints** (not Production checkpoints — Production checkpoints don't work well with OOBE manipulation)
+
+3. Click **OK**
+
+### 4.6 Install Windows 11 on the VM
+
+1. Double-click the VM to open its console window → click **Start**
+2. When you see **"Press any key to boot from CD or DVD..."** — click inside the console and press any key immediately
+3. Windows Setup will load. Work through it:
+   - Language: English (United Kingdom)
+   - Time and currency format: English (United Kingdom)
+   - Keyboard: United Kingdom
+   - Click **Install now**
+   - Accept the licence terms
+   - Choose **Custom: Install Windows only (advanced)**
+   - Select the unallocated disk → click **Next**
+4. Windows will install and restart several times. This takes 10–20 minutes.
+
+> After the final restart, Windows begins the **Out-of-Box Experience (OOBE)** — the initial setup wizard. **STOP HERE.** Do not proceed through OOBE. You need to extract the hardware hash before the device is set up.
+
+### 4.7 Take a Checkpoint Before OOBE
+
+When Windows restarts and you see the first OOBE screen (usually asking for your region):
+
+1. In the Hyper-V Manager (not the console), right-click the VM → **Checkpoint**
+2. Name it: `Pre-OOBE — Fresh`
+3. Click **OK**
+
+> This checkpoint saves your VM in the pre-OOBE state. You will return to it later to run the full Autopilot test. If something goes wrong, you can always revert to this checkpoint.
+
+📸 **SCREENSHOT:** `02-checkpoint-pre-oobe.png` — Hyper-V Manager showing the `Pre-OOBE — Fresh` checkpoint under the VM.
+
+---
+
+## 5. Phase 3 — Extract Hardware Hash & Register with Autopilot
+
+The hardware hash is a unique fingerprint of your VM (simulating a real device serial number + hardware details). Autopilot uses this to identify the device when it connects to the internet during OOBE.
+
+### 5.1 Open a PowerShell Window at OOBE
+
+You need a PowerShell prompt without going through OOBE setup.
+
+1. On the first OOBE screen (region selection), press **Shift + F10**  
+   A Command Prompt window will open inside the VM.
+2. In the Command Prompt, type:
+
+```cmd
+powershell
+```
+
+Press **Enter**. You now have a PowerShell prompt inside the VM.
+
+### 5.2 Option A — Register Directly Online (Recommended)
+
+This method registers the hardware hash directly to your Intune tenant without needing to export and import a CSV file. You need an internet connection in the VM (which you have via the External switch).
+
+**Run this in the PowerShell window inside the VM:**
+
+```powershell
+# Step 1: Install NuGet provider (required inside the VM too)
+Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+
+# Step 2: Install the AutopilotInfo script
+Install-Script -Name Get-WindowsAutopilotInfo -Force
+
+# Step 3: Register the device directly to your Intune tenant
+# You will be prompted to sign in with your admin account
+Get-WindowsAutopilotInfo -Online
+```
+
+When prompted, sign in with: `admin@<tenant>.onmicrosoft.com` and your admin password.
+
+The script will:
+1. Extract the hardware hash from the VM
+2. Connect to your Intune tenant via the Microsoft Graph API
+3. Register the device directly
+
+This takes 1–3 minutes. When complete, you will see a message confirming the device was registered.
+
+📸 **SCREENSHOT:** `03-hash-registration-success.png` — The PowerShell window inside the VM showing the successful registration output from `Get-WindowsAutopilotInfo -Online`.
+
+### 5.3 Option B — Export CSV and Import Manually (Fallback)
+
+Use this if Option A fails (e.g. Graph API issues, MFA complications).
+
+**Inside the VM PowerShell window:**
+
+```powershell
+# Install NuGet and script (same as above)
+Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+Install-Script -Name Get-WindowsAutopilotInfo -Force
+
+# Export the hardware hash to a CSV file
+Get-WindowsAutopilotInfo -OutputFile C:\AutopilotHWID.csv
+```
+
+**To get the CSV off the VM:**  
+The easiest way is to copy it via a shared folder or paste the file content. Alternatively:
+
+```powershell
+# Display the CSV contents so you can copy it manually
+Get-Content C:\AutopilotHWID.csv
+```
+
+Copy the output and paste it into a new file on your host machine called `AutopilotHWID.csv`.
+
+**Now import into Intune:**
+
+1. Go to: https://intune.microsoft.com
+2. Navigate to: **Devices → Windows → Windows enrollment → Devices**
+3. Click **Import**
+4. Click the folder icon and browse to your `AutopilotHWID.csv` file
+5. Click **Import**
+6. Wait 5–10 minutes, then refresh the page
+
+📸 **SCREENSHOT:** `03-csv-import.png` — The Intune Devices import screen showing the import in progress or completed.
+
+### 5.4 Verify the Device Appears in Autopilot
+
+1. In Intune, go to: **Devices → Windows → Windows enrollment → Devices**
+   (This is the Autopilot devices list)
+2. The VM should appear. The **Profile status** column will initially show **"Not assigned"** — this is normal until you create and assign the deployment profile.
+3. Note the **Serial number** — for a VM this is a GUID, not a real serial number.
+
+📸 **SCREENSHOT:** `03-device-in-autopilot.png` — The Autopilot devices list showing the registered VM with its serial number and "Not assigned" status.
+
+### 5.5 Add the Device to the Autopilot-Devices Group
+
+1. Go to: https://entra.microsoft.com → **Devices → All devices**
+2. Wait for the device to appear (it may take 5–15 minutes after registration). It will appear with a name like `Unknown` or a GUID initially.
+3. Alternatively, find it in Intune: **Devices → All devices**
+4. Once found, note the **Azure AD Device ID**
+5. Go to **Groups → All groups → Autopilot-Devices → Members → Add members**
+6. Search for the device and add it
+
+> **Note:** If the device doesn't appear yet, continue with the policy configuration steps below and come back to add it to the group before running the end-to-end test.
+
+---
+
+## 6. Phase 4 — Create the Autopilot Deployment Profile
+
+This profile tells Windows Autopilot how to set up the device — what mode to use, what screens to skip, and what experience the user gets.
+
+### 6.1 Navigate to Deployment Profiles
+
+In the Intune admin centre:  
+**Devices → Windows → Windows enrollment → Deployment profiles → Create profile → Windows PC**
+
+### 6.2 Configure the Profile
+
+**Tab 1 — Basics:**
+- Name: `TechCorp UK — Autopilot Profile`
+- Description: `User-driven Autopilot profile for new starter device provisioning`
+- Convert all targeted devices to Autopilot: **No** (only applies to existing devices)
+
+**Tab 2 — Out-of-box experience (OOBE):**
+
+| Setting | Value | Why |
+|---|---|---|
+| Deployment mode | **User-driven** | The user signs in with their own credentials during setup |
+| Join to Azure AD as | **Azure AD joined** | Cloud-native, no on-prem domain required |
+| Microsoft Software Licence Terms | **Hide** | Skip the EULA screen for the user |
+| Privacy settings | **Hide** | Skip the privacy settings screen |
+| Hide change account options | **Hide** | Prevents user switching accounts during OOBE |
+| User account type | **Standard** | Users should not be local admins in a managed environment |
+| Allow pre-provisioned deployment | **No** | Not using White Glove/pre-provisioning in this lab |
+| Language (Region) | **Operating system default** | |
+| Automatically configure keyboard | **Yes** | |
+| Apply device name template | **Yes** | Template: `TCUK-%SERIAL%` (uses the device serial number) |
+
+**Tab 3 — Assignments:**
+- Under **Included groups**, click **Add groups**
+- Select: `Autopilot-Devices`
+- Click **Select** then **Next**
+
+**Tab 4 — Review + create:**
+- Review all settings
+- Click **Create**
+
+📸 **SCREENSHOT:** `04-deployment-profile-created.png` — The deployment profiles list showing `TechCorp UK — Autopilot Profile` with its assignment status.
+
+📸 **SCREENSHOT:** `04-deployment-profile-settings.png` — The OOBE settings tab of the deployment profile showing all configured values.
+
+### 6.3 Verify Profile Assignment
+
+Go back to: **Devices → Windows → Windows enrollment → Devices** (Autopilot devices list)
+
+Within 5–15 minutes, the **Profile status** column for your VM should change from `Not assigned` to `Assigned`.
+
+If it stays at `Not assigned` after 15 minutes, check that:
+- The device was added to the `Autopilot-Devices` group
+- The deployment profile is assigned to `Autopilot-Devices`
+- You can force a sync: **Devices → Windows → Windows enrollment → Devices → Sync**
+
+📸 **SCREENSHOT:** `04-profile-assigned.png` — The Autopilot devices list showing the VM with Profile status = **Assigned**.
+
+---
+
+## 7. Phase 5 — Configure the Enrollment Status Page (ESP)
+
+The ESP shows a progress screen to the user during device setup ("Setting up your device for work..."). It blocks the desktop until all required apps and policies are installed.
+
+### 7.1 Navigate to ESP
+
+In Intune: **Devices → Windows → Windows enrollment → Enrollment Status Page**
+
+You will see a **Default** policy. Click on it to edit it, or click **Create** to make a new one.
+
+Click **Create**.
+
+### 7.2 Configure the ESP Policy
+
+**Tab 1 — Basics:**
+- Name: `TechCorp UK — Enrollment Status Page`
+- Description: `ESP shown during Autopilot provisioning — blocks desktop until setup complete`
+
+**Tab 2 — Settings:**
+
+| Setting | Value | Why |
+|---|---|---|
+| Show app and profile configuration progress | **Yes** | This enables the ESP |
+| Show error when installation takes longer than specified number of minutes | **Yes** |  |
+| Time limit (minutes) | `60` | Allow up to 1 hour before showing an error |
+| Allow users to collect logs | **Yes** | Critical for troubleshooting failures |
+| Show custom message when an error occurs | **Yes** | Message: `Device setup encountered an issue. Please contact IT Support on ext. 2000.` |
+| Block device use until all apps and profiles are installed | **Yes** | Forces complete setup before user gets desktop |
+| Allow users to reset device if installation error occurs | **No** | IT should handle resets |
+| Allow users to use device if installation error occurs | **No** | Do not allow bypass |
+| Block device use until these required apps are installed if they are assigned to the user/device | **All** |  |
+
+**Tab 3 — Assignments:**
+- Include: **All devices** (or specifically `Autopilot-Devices` if you prefer)
+
+**Tab 4 — Review + create:**
+- Click **Create**
+
+📸 **SCREENSHOT:** `05-esp-settings.png` — The ESP policy settings tab showing all configured values.
+
+📸 **SCREENSHOT:** `05-esp-assignments.png` — The ESP policy assignments tab.
+
+---
+
+## 8. Phase 6 — Create Configuration Profiles
+
+Configuration profiles push settings to devices automatically. You will create two: a security baseline profile and a branding/personalisation profile.
+
+### 8.1 Navigate to Configuration Profiles
+
+In Intune: **Devices → Windows → Configuration → Create → New policy**
+
+### 8.2 Profile 1 — Windows Security Baseline
+
+Rather than building a custom security profile from scratch, use Microsoft's built-in Security Baseline — a pre-configured set of settings recommended by Microsoft's security team.
+
+1. In Intune: **Endpoint security → Security baselines → Security Baseline for Windows 11**
+2. Click **Create profile**
+
+**Tab 1 — Basics:**
+- Name: `TechCorp UK — Windows 11 Security Baseline`
+- Description: `Microsoft recommended security baseline for Windows 11 endpoints`
+
+**Tab 2 — Configuration settings:**  
+Leave all settings at their **default (baseline)** values. The defaults are Microsoft's recommended configuration. For this lab, note a few key settings that are enabled by default:
+- BitLocker drive encryption: Enabled
+- Windows Defender Antivirus: Enabled and configured
+- Windows Firewall: Enabled
+- Account lockout threshold: 10 invalid attempts
+- Minimum password length: 8 characters
+- Password complexity: Enabled
+
+📸 **SCREENSHOT:** `06-security-baseline-settings.png` — The security baseline configuration settings page showing several key settings and their default values.
+
+**Tab 3 — Assignments:**
+- Included groups: `Autopilot-Devices`
+
+**Tab 4 — Review + create → Create**
+
+📸 **SCREENSHOT:** `06-security-baseline-created.png` — Security baselines list showing the profile with its assignment.
+
+### 8.3 Profile 2 — Custom Configuration Profile (Branding & Personalisation)
+
+This profile sets a custom wallpaper and lock screen image, and configures some UX settings.
+
+1. In Intune: **Devices → Windows → Configuration → Create → New policy**
+2. Platform: **Windows 10 and later**
+3. Profile type: **Settings catalog**
+4. Click **Create**
+
+**Tab 1 — Basics:**
+- Name: `TechCorp UK — Desktop Branding`
+- Description: `Wallpaper, lock screen, and personalisation settings for managed devices`
+
+**Tab 2 — Configuration settings:**  
+Click **Add settings** and search for each of the following:
+
+**Search: "Lock screen"**
+- Enable: **Device Lock → Prevent enabling lock screen camera** → set to **Enabled**
+
+**Search: "Start"**
+- Enable: **Start → Hide app list in start menu** → set to **Enabled**
+- Enable: **Start → Hide recently added apps** → set to **Enabled**
+
+**Search: "Microsoft Store"**
+- Enable: **ApplicationManagement → Allow store** → set to **Not allowed** (prevents users installing unapproved apps from the Store)
+
+**Search: "Cortana"**
+- Enable: **Experience → Allow Cortana** → set to **Not allowed**
+
+**Tab 3 — Assignments:**
+- Included groups: `Autopilot-Devices`
+
+**Tab 4 — Review + create → Create**
+
+📸 **SCREENSHOT:** `06-config-profile-settings.png` — The settings catalog profile showing the configured settings.
+
+📸 **SCREENSHOT:** `06-config-profile-assignments.png` — The profile assignments tab.
+
+### 8.4 Profile 3 — Windows Update Ring
+
+This controls which Windows updates are installed and when.
+
+1. In Intune: **Devices → Windows → Update rings for Windows 10 and later → Create profile**
+
+**Tab 1 — Basics:**
+- Name: `TechCorp UK — Update Ring`
+- Description: `Windows Update deferral and quality update settings for managed devices`
+
+**Tab 2 — Update ring settings:**
+
+| Setting | Value |
+|---|---|
+| Servicing channel | Semi-Annual Channel |
+| Microsoft product updates | Allow |
+| Windows drivers | Allow |
+| Quality update deferral period (days) | `7` |
+| Feature update deferral period (days) | `30` |
+| Automatic update behaviour | Auto install at maintenance time |
+| Active hours start | 8 AM |
+| Active hours end | 6 PM |
+| Restart checks | Allow |
+
+**Tab 3 — Assignments:** `Autopilot-Devices`
+
+**Create**
+
+📸 **SCREENSHOT:** `06-update-ring.png` — The Update Ring profile showing configured deferral periods.
+
+---
+
+## 9. Phase 7 — Create a Compliance Policy
+
+A compliance policy defines the minimum security standards a device must meet. If a device fails compliance, it can be blocked from accessing company resources (enforced via Conditional Access — that is Project 03).
+
+### 9.1 Navigate to Compliance Policies
+
+In Intune: **Devices → Compliance → Create policy**  
+Platform: **Windows 10 and later**  
+Click **Create**
+
+### 9.2 Configure the Policy
+
+**Tab 1 — Basics:**
+- Name: `TechCorp UK — Compliance Baseline`
+- Description: `Minimum security requirements for all TechCorp UK managed Windows devices`
+
+**Tab 2 — Compliance settings:**
+
+Expand each section and configure as follows:
+
+**Device Health:**
+| Setting | Value |
+|---|---|
+| Require BitLocker | Require |
+| Require Secure Boot to be enabled on the device | Require |
+| Require code integrity | Require |
+
+**Device Properties:**
+| Setting | Value |
+|---|---|
+| Minimum OS version | `10.0.22000.1` (Windows 11 minimum build) |
+
+**System Security:**
+| Setting | Value |
+|---|---|
+| Require a password to unlock mobile devices | Require |
+| Simple passwords | Block |
+| Minimum password length | `8` |
+| Password type | Alphanumeric |
+| Password expiration (days) | `90` |
+| Number of previous passwords to prevent reuse | `5` |
+| Require encryption of data storage on device | Require |
+| Firewall | Require |
+| Antivirus | Require |
+| Antispyware | Require |
+| Microsoft Defender Antimalware | Require |
+| Microsoft Defender Antimalware minimum version | `4.18.0.0` |
+| Microsoft Defender Antimalware security intelligence up-to-date | Require |
+| Real-time protection | Require |
+
+**Tab 3 — Actions for noncompliance:**
+
+These are what happens when a device is marked non-compliant.
+
+Click **Add** for each action:
+
+| Order | Action | Schedule |
+|---|---|---|
+| 1 | Mark device non-compliant | Immediately (0 days) |
+| 2 | Send email to end user | 1 day after noncompliance |
+| 3 | Retire the noncompliant device | 30 days after noncompliance |
+
+For the email action, click **Edit** and choose or create a **notification message template**:
+- Name: `Device Non-Compliance Notice`
+- Subject: `Your device does not meet TechCorp UK security requirements`
+- Body:
+```
+Your device has been identified as non-compliant with TechCorp UK security policies.
+
+Please contact IT Support immediately to resolve this issue.
+
+Common causes:
+- BitLocker is not enabled
+- Windows Defender is not running
+- Your operating system needs updating
+
+IT Support: ext. 2000 | itsupport@techcorpuk.com
+```
+
+**Tab 4 — Assignments:**
+- Included groups: `Autopilot-Devices`
+
+**Tab 5 — Review + create → Create**
+
+📸 **SCREENSHOT:** `07-compliance-policy-settings.png` — The compliance policy settings showing the Device Health and System Security sections with all values configured.
+
+📸 **SCREENSHOT:** `07-compliance-actions.png` — The Actions for noncompliance tab showing all three actions.
+
+📸 **SCREENSHOT:** `07-compliance-assignments.png` — The policy assignments tab.
+
+---
+
+## 10. Phase 8 — Package & Deploy an Application
+
+You will package 7-Zip as a Win32 app and deploy it to the device via Intune. This demonstrates the full app packaging and deployment workflow used in real organisations.
+
+### 10.1 Package 7-Zip with IntuneWinAppUtil.exe
+
+**Run this in PowerShell or Command Prompt on your host machine (not the VM):**
+
+```powershell
+# Navigate to where you saved the tool
+cd C:\Tools
+
+# Run the packaging tool
+.\IntuneWinAppUtil.exe -c "C:\Tools\7zip" -s "7z2301-x64.exe" -o "C:\Tools\output"
+```
+
+**Parameters explained:**
+- `-c` = **source folder** containing the installer (`C:\Tools\7zip`)
+- `-s` = **setup file** — the specific installer filename (`7z2301-x64.exe`)
+- `-o` = **output folder** where the `.intunewin` file will be saved (`C:\Tools\output`)
+
+When prompted: **"Do you want to encrypt the content and enable the option for advanced encryption?"** → Type `N` and press Enter.
+
+The tool will create: `C:\Tools\output\7z2301-x64.intunewin`
+
+📸 **SCREENSHOT:** `08-packaging-output.png` — The command prompt/PowerShell window showing the IntuneWinAppUtil.exe output, including the line confirming the `.intunewin` file was created.
+
+### 10.2 Find the 7-Zip Silent Install Command
+
+For any app you package, you need to know the **silent install command** (runs without showing a UI to the user) and the **uninstall command**.
+
+For 7-Zip:
+- **Install command:** `7z2301-x64.exe /S`  
+  (`/S` = silent install — no UI shown)
+- **Uninstall command:** `MsiExec.exe /X{23170F69-40C1-2702-2301-000001000000} /qn`  
+  (The GUID changes per version — verify yours by installing 7-Zip on a test machine and checking Programs & Features → right-click → look at the uninstall string in the registry at `HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall`)
+
+> **Tip:** To find the uninstall string via PowerShell:
+> ```powershell
+> Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*" |
+>   Where-Object { $_.DisplayName -like "*7-zip*" } |
+>   Select-Object DisplayName, UninstallString
+> ```
+
+### 10.3 Add the App in Intune
+
+1. In Intune: **Apps → Windows → Add**
+2. App type: **Windows app (Win32)**
+3. Click **Select**
+
+**Tab 1 — App information:**
+- Click **Select app package file** → browse to `C:\Tools\output\7z2301-x64.intunewin`
+- After upload, fill in:
+  - Name: `7-Zip 23.01`
+  - Description: `Open source file archiver and compression tool`
+  - Publisher: `Igor Pavlov`
+  - App version: `23.01`
+  - Category: **Utilities**
+  - Display this as a featured app in the Company Portal: **No**
+  - Information URL: `https://www.7-zip.org`
+  - Privacy URL: (leave blank)
+  - Developer: `Igor Pavlov`
+  - Owner: `IT Department`
+  - Notes: `Deployed via Intune as part of Autopilot standard build`
+  - Logo: optionally download the 7-Zip logo and upload it
+
+**Tab 2 — Program:**
+| Setting | Value |
+|---|---|
+| Install command | `7z2301-x64.exe /S` |
+| Uninstall command | `MsiExec.exe /X{23170F69-40C1-2702-2301-000001000000} /qn` |
+| Install behaviour | **System** (installs for all users, not just current user) |
+| Device restart behaviour | **App install may force a device restart** |
+| Return codes | Leave defaults (0 = success, 1707 = success, 3010 = soft reboot, 1641 = hard reboot, 1618 = retry) |
+
+**Tab 3 — Requirements:**
+| Setting | Value |
+|---|---|
+| Operating system architecture | **64-bit** |
+| Minimum operating system | **Windows 10 21H1** |
+
+**Tab 4 — Detection rules:**
+
+Detection rules tell Intune whether 7-Zip is already installed on a device (so it doesn't reinstall unnecessarily).
+
+Rule format: **Manually configure detection rules → Add**
+
+| Setting | Value |
+|---|---|
+| Rule type | **File** |
+| Path | `C:\Program Files\7-Zip` |
+| File or folder | `7zFM.exe` |
+| Detection method | **File or folder exists** |
+| Associated with a 32-bit app on 64-bit clients | **No** |
+
+Click **OK**
+
+**Tab 5 — Dependencies:**  
+None required — skip.
+
+**Tab 6 — Supersedence:**  
+None required — skip.
+
+**Tab 7 — Assignments:**
+
+| Type | Group | End user notifications | Installation deadline |
+|---|---|---|---|
+| Required | `Autopilot-Devices` | Show all toast notifications | No deadline (ASAP) |
+
+Click **Next → Create**
+
+📸 **SCREENSHOT:** `08-app-program-settings.png` — The Win32 app Program tab showing install and uninstall commands.
+
+📸 **SCREENSHOT:** `08-app-detection-rule.png` — The detection rules tab showing the file-based detection rule.
+
+📸 **SCREENSHOT:** `08-app-assignments.png` — The assignments tab showing Required assignment to Autopilot-Devices.
+
+📸 **SCREENSHOT:** `08-app-created.png` — The Windows apps list in Intune showing 7-Zip 23.01 with its assignment status.
+
+---
+
+## 11. Phase 9 — End-to-End Test (The Full Run)
+
+This is where everything comes together. You will reset the VM back to its pre-OOBE state and run through the complete Autopilot experience from first boot.
+
+### 11.1 Pre-Test Checklist
+
+Before starting the test, confirm ALL of the following in Intune:
+
+- [ ] Device registered in **Devices → Windows → Windows enrollment → Devices** with Profile status = **Assigned**
+- [ ] Device is a member of the `Autopilot-Devices` group
+- [ ] Autopilot Deployment Profile assigned to `Autopilot-Devices`
+- [ ] ESP policy assigned (All devices or Autopilot-Devices)
+- [ ] Security Baseline profile assigned to `Autopilot-Devices`
+- [ ] Desktop Branding profile assigned to `Autopilot-Devices`
+- [ ] Update Ring assigned to `Autopilot-Devices`
+- [ ] Compliance Policy assigned to `Autopilot-Devices`
+- [ ] 7-Zip app assigned as **Required** to `Autopilot-Devices`
+
+If anything is missing, fix it before proceeding.
+
+### 11.2 Revert the VM to Pre-OOBE State
+
+In Hyper-V Manager:
+
+1. Make sure the VM is **off** (Shut down or Turn off — not just saved)
+2. Right-click the VM → **Checkpoints**
+3. Find `Pre-OOBE — Fresh`
+4. Right-click it → **Apply**
+5. When prompted "Do you want to create a checkpoint before applying?" → click **Apply** (no new checkpoint needed)
+
+The VM is now back at the first OOBE screen.
+
+📸 **SCREENSHOT:** `09-checkpoint-applied.png` — Hyper-V Manager showing the VM with the checkpoint being applied (or the VM reverted to the checkpoint state).
+
+### 11.3 Boot Through Autopilot
+
+1. Double-click the VM → click **Start** to open the console
+2. The first OOBE screen appears — **Region selection**
+3. **Do not click anything yet.** Wait 20–30 seconds.
+
+At this point, the VM is connecting to the internet and checking against the Autopilot service. If the device serial number matches your registered Autopilot device, Windows will redirect the OOBE to the Autopilot flow.
+
+You will know it worked when the generic Windows OOBE region/keyboard screen is replaced by a **company-branded sign-in screen** with the message: **"Setting up for your organization"** or similar.
+
+4. If the Autopilot redirect happens, you will see the **Sign in** prompt. Enter the test user credentials:  
+   - Email: `newstarter@<tenant>.onmicrosoft.com`
+   - Password: the temporary password you set earlier
+
+5. After sign-in, the **Enrollment Status Page** will appear showing progress bars:
+   - "Securing your device..."
+   - "Installing apps..."
+   - "Configuring your device..."
+
+📸 **SCREENSHOT:** `09-autopilot-signout-screen.png` — The Autopilot-redirected sign-in screen showing your tenant name or "Setting up for your organization."
+
+📸 **SCREENSHOT:** `09-esp-progress.png` — The Enrollment Status Page showing progress bars during device setup.
+
+### 11.4 Monitor in Intune While It Runs
+
+In a separate browser window on your host machine, watch the device being enrolled in real time:
+
+1. Go to Intune: **Devices → All devices**
+2. The device should appear within a few minutes of the Autopilot process starting
+3. Click on the device and monitor:
+   - **Enrollment state**: should move from `Unknown` → `Enrolled`
+   - **Compliance state**: should show `Compliant` (may take 10–20 minutes)
+   - **Managed by**: `Intune`
+   - **Primary user**: `Test Newstarter`
+
+📸 **SCREENSHOT:** `09-device-enrolled-intune.png` — The device detail page in Intune showing Enrollment state = **Enrolled** and Compliance = **Compliant**.
+
+### 11.5 Verify App Deployment
+
+1. In Intune: **Apps → Windows → 7-Zip 23.01**
+2. Click **Device install status**
+3. The VM should appear in the list with status **Installed**
+
+📸 **SCREENSHOT:** `09-app-install-status.png` — The 7-Zip device install status page showing the VM with status **Installed**.
+
+### 11.6 After the ESP Completes — Verify the Desktop
+
+Once the ESP finishes (all bars complete), the VM will show the Windows desktop signed in as `Test Newstarter`.
+
+Verify:
+- [ ] User is signed in as `newstarter@<tenant>.onmicrosoft.com`
+- [ ] Start menu shows the customised experience (apps hidden, recently added hidden)
+- [ ] 7-Zip is installed: open **Start → All apps** → look for 7-Zip, or check `C:\Program Files\7-Zip`
+- [ ] Device appears compliant in Intune (refresh the device page)
+
+**To check 7-Zip inside the VM:**
+
+```powershell
+# Run inside the VM (open PowerShell as the test user)
+Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*" |
+  Where-Object { $_.DisplayName -like "*7-zip*" } |
+  Select-Object DisplayName, DisplayVersion
+```
+
+Expected output: `7-Zip 23.01` (or the version you packaged).
+
+📸 **SCREENSHOT:** `09-desktop-final.png` — The VM desktop showing the user signed in, after the ESP completed and Autopilot setup finished.
+
+📸 **SCREENSHOT:** `09-7zip-installed.png` — 7-Zip visible in the Start menu or the PowerShell output confirming installation.
+
+📸 **SCREENSHOT:** `09-device-compliant-intune.png` — The Intune device page showing the device as **Enrolled** and **Compliant** with the primary user set to Test Newstarter.
+
+### 11.7 Check Compliance Policy Status
+
+1. In Intune: **Devices → All devices → [your device] → Device compliance**
+2. You should see your `TechCorp UK — Compliance Baseline` policy listed as **Compliant**
+3. Click on it to see the individual setting statuses
+
+📸 **SCREENSHOT:** `09-compliance-status-detail.png` — The device compliance detail page showing the TechCorp UK policy and individual setting results.
+
+### 11.8 Check Configuration Profile Status
+
+1. In Intune: **Devices → All devices → [your device] → Device configuration**
+2. You should see all your profiles listed with their status:
+   - `TechCorp UK — Windows 11 Security Baseline`: **Succeeded**
+   - `TechCorp UK — Desktop Branding`: **Succeeded**
+   - `TechCorp UK — Update Ring`: **Succeeded**
+
+📸 **SCREENSHOT:** `09-config-profiles-status.png` — The device configuration page showing all three profiles with **Succeeded** status.
+
+---
+
+## 12. Phase 10 — Evidence Capture & GitHub Upload
+
+### 12.1 Organise Your Screenshots
+
+Create this folder structure in your local copy of the repository:
+
+```
+01-Intune-Autopilot-Lab/
+├── README.md               ← update with completed status and inline screenshots
+├── WALKTHROUGH.md          ← this document (full step-by-step guide)
+├── assets/
+│   ├── 00-hyperv-manager-open.png
+│   ├── 00-autopilotinfo-installed.png
+│   ├── 01-m365-trial-confirmation.png
+│   ├── 01-licences-active.png
+│   ├── 01-intune-dashboard.png
+│   ├── 01-entra-dashboard.png
+│   ├── 01-test-user-created.png
+│   ├── 01-security-groups.png
+│   ├── 02-virtual-switch.png
+│   ├── 02-vm-created.png
+│   ├── 02-vtpm-enabled.png
+│   ├── 02-checkpoint-pre-oobe.png
+│   ├── 03-hash-registration-success.png
+│   ├── 03-device-in-autopilot.png
+│   ├── 04-deployment-profile-created.png
+│   ├── 04-deployment-profile-settings.png
+│   ├── 04-profile-assigned.png
+│   ├── 05-esp-settings.png
+│   ├── 05-esp-assignments.png
+│   ├── 06-security-baseline-settings.png
+│   ├── 06-security-baseline-created.png
+│   ├── 06-config-profile-settings.png
+│   ├── 06-config-profile-assignments.png
+│   ├── 06-update-ring.png
+│   ├── 07-compliance-policy-settings.png
+│   ├── 07-compliance-actions.png
+│   ├── 07-compliance-assignments.png
+│   ├── 08-packaging-output.png
+│   ├── 08-app-program-settings.png
+│   ├── 08-app-detection-rule.png
+│   ├── 08-app-assignments.png
+│   ├── 08-app-created.png
+│   ├── 09-checkpoint-applied.png
+│   ├── 09-autopilot-signout-screen.png
+│   ├── 09-esp-progress.png
+│   ├── 09-device-enrolled-intune.png
+│   ├── 09-app-install-status.png
+│   ├── 09-desktop-final.png
+│   ├── 09-7zip-installed.png
+│   ├── 09-device-compliant-intune.png
+│   ├── 09-compliance-status-detail.png
+│   └── 09-config-profiles-status.png
+└── scripts/
+    ├── Get-AutopilotHWID.ps1
+    ├── Check-DeviceCompliance.ps1
+    └── Force-IntuneSync.ps1
+```
+
+### 12.2 Save the PowerShell Scripts
+
+Create the following scripts in the `scripts/` folder:
+
+**`scripts/Get-AutopilotHWID.ps1`:**
+```powershell
+<#
+.SYNOPSIS
+    Extracts the Windows Autopilot hardware hash and registers the device to Intune.
+.DESCRIPTION
+    Run this script inside a Windows 11 device at the OOBE stage (Shift+F10 → PowerShell).
+    Uses the Get-WindowsAutopilotInfo community script to extract the hardware hash
+    and register the device directly to the tenant via Microsoft Graph.
+.NOTES
+    Author: Prides Maboh
+    Requires: Get-WindowsAutopilotInfo script (Install-Script -Name Get-WindowsAutopilotInfo)
+    Run as: Administrator
+#>
+
+# Install prerequisites
+Write-Host "Installing NuGet package provider..." -ForegroundColor Cyan
+Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+
+Write-Host "Setting PSGallery as trusted..." -ForegroundColor Cyan
+Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+
+Write-Host "Installing Get-WindowsAutopilotInfo..." -ForegroundColor Cyan
+Install-Script -Name Get-WindowsAutopilotInfo -Force
+
+# Register device directly to tenant (will prompt for admin credentials)
+Write-Host "Registering device with Autopilot..." -ForegroundColor Cyan
+Write-Host "Sign in with your Intune admin account when prompted." -ForegroundColor Yellow
+Get-WindowsAutopilotInfo -Online
+
+Write-Host "Registration complete. Check Intune Autopilot Devices for this device." -ForegroundColor Green
+```
+
+**`scripts/Force-IntuneSync.ps1`:**
+```powershell
+<#
+.SYNOPSIS
+    Forces an immediate Intune policy sync on the current device.
+.DESCRIPTION
+    Run this on the managed device to trigger an immediate check-in with Intune.
+    Useful when testing policy changes and not wanting to wait for the default sync interval.
+.NOTES
+    Author: Prides Maboh
+    Run as: Administrator
+    Default Intune sync interval is every 8 hours; this forces it immediately.
+#>
+
+Write-Host "Triggering Intune management extension sync..." -ForegroundColor Cyan
+
+# Method 1: Trigger via scheduled task
+try {
+    Get-ScheduledTask -TaskName "Schedule #3 created by enrollment client" | Start-ScheduledTask
+    Write-Host "Intune sync scheduled task triggered." -ForegroundColor Green
+} catch {
+    Write-Host "Method 1 failed, trying Method 2..." -ForegroundColor Yellow
+}
+
+# Method 2: Restart the Intune management extension service
+try {
+    Restart-Service -Name "IntuneManagementExtension" -Force
+    Write-Host "Intune Management Extension service restarted." -ForegroundColor Green
+} catch {
+    Write-Host "Method 2 failed." -ForegroundColor Yellow
+}
+
+# Method 3: Force via MDM diagnostics
+Start-Process -FilePath "DeviceEnroller.exe" -ArgumentList "/o" -NoNewWindow -Wait
+
+Write-Host ""
+Write-Host "Sync triggered. Check Intune in 2-5 minutes for updated policy status." -ForegroundColor Green
+Write-Host "In Intune: Devices → [Device Name] → Sync" -ForegroundColor Cyan
+```
+
+**`scripts/Check-DeviceCompliance.ps1`:**
+```powershell
+<#
+.SYNOPSIS
+    Checks the compliance status of the current device and outputs a summary.
+.DESCRIPTION
+    Runs locally on the managed device to check key compliance settings:
+    BitLocker, Defender, Firewall, and OS version.
+.NOTES
+    Author: Prides Maboh
+    Run as: Administrator
+#>
+
+Write-Host "=== TechCorp UK — Device Compliance Check ===" -ForegroundColor Cyan
+Write-Host "Date: $(Get-Date)" -ForegroundColor Gray
+Write-Host ""
+
+# Check 1: BitLocker
+Write-Host "1. BitLocker Status:" -ForegroundColor White
+$bitlocker = Get-BitLockerVolume -MountPoint "C:" -ErrorAction SilentlyContinue
+if ($bitlocker) {
+    $status = $bitlocker.ProtectionStatus
+    if ($status -eq "On") {
+        Write-Host "   ✅ BitLocker is ON (Protection Status: $status)" -ForegroundColor Green
+    } else {
+        Write-Host "   ❌ BitLocker is OFF or SUSPENDED (Protection Status: $status)" -ForegroundColor Red
+    }
+} else {
+    Write-Host "   ⚠️  Could not retrieve BitLocker status" -ForegroundColor Yellow
+}
+
+# Check 2: Windows Defender
+Write-Host ""
+Write-Host "2. Windows Defender Status:" -ForegroundColor White
+$defender = Get-MpComputerStatus -ErrorAction SilentlyContinue
+if ($defender) {
+    Write-Host "   Antivirus Enabled: $(if ($defender.AntivirusEnabled) {'✅ Yes'} else {'❌ No'})" -ForegroundColor $(if ($defender.AntivirusEnabled) {'Green'} else {'Red'})
+    Write-Host "   Real-Time Protection: $(if ($defender.RealTimeProtectionEnabled) {'✅ Yes'} else {'❌ No'})" -ForegroundColor $(if ($defender.RealTimeProtectionEnabled) {'Green'} else {'Red'})
+    Write-Host "   Definitions Up to Date: $(if ($defender.AntivirusSignatureAge -le 1) {'✅ Yes'} else {"⚠️  $($defender.AntivirusSignatureAge) days old"})" -ForegroundColor $(if ($defender.AntivirusSignatureAge -le 1) {'Green'} else {'Yellow'})
+} else {
+    Write-Host "   ⚠️  Could not retrieve Defender status" -ForegroundColor Yellow
+}
+
+# Check 3: Firewall
+Write-Host ""
+Write-Host "3. Windows Firewall Status:" -ForegroundColor White
+$firewall = Get-NetFirewallProfile -ErrorAction SilentlyContinue
+foreach ($profile in $firewall) {
+    $icon = if ($profile.Enabled) { '✅' } else { '❌' }
+    $color = if ($profile.Enabled) { 'Green' } else { 'Red' }
+    Write-Host "   $icon $($profile.Name) profile: $(if ($profile.Enabled) {'Enabled'} else {'Disabled'})" -ForegroundColor $color
+}
+
+# Check 4: OS Version
+Write-Host ""
+Write-Host "4. Operating System Version:" -ForegroundColor White
+$os = Get-WmiObject Win32_OperatingSystem
+Write-Host "   Version: $($os.Caption) (Build $($os.BuildNumber))" -ForegroundColor $(if ([int]$os.BuildNumber -ge 22000) {'Green'} else {'Yellow'})
+
+# Check 5: Secure Boot
+Write-Host ""
+Write-Host "5. Secure Boot:" -ForegroundColor White
+$secureBoot = Confirm-SecureBootUEFI -ErrorAction SilentlyContinue
+Write-Host "   $(if ($secureBoot) {'✅ Secure Boot is enabled'} else {'❌ Secure Boot is disabled or not supported'})" -ForegroundColor $(if ($secureBoot) {'Green'} else {'Red'})
+
+# Check 6: TPM
+Write-Host ""
+Write-Host "6. TPM Status:" -ForegroundColor White
+$tpm = Get-Tpm -ErrorAction SilentlyContinue
+if ($tpm) {
+    Write-Host "   TPM Present: $(if ($tpm.TpmPresent) {'✅ Yes'} else {'❌ No'})" -ForegroundColor $(if ($tpm.TpmPresent) {'Green'} else {'Red'})
+    Write-Host "   TPM Enabled: $(if ($tpm.TpmEnabled) {'✅ Yes'} else {'❌ No'})" -ForegroundColor $(if ($tpm.TpmEnabled) {'Green'} else {'Red'})
+} else {
+    Write-Host "   ⚠️  Could not retrieve TPM status" -ForegroundColor Yellow
+}
+
+Write-Host ""
+Write-Host "=== Check Complete ===" -ForegroundColor Cyan
+Write-Host "For authoritative compliance status, check Intune:" -ForegroundColor Gray
+Write-Host "https://intune.microsoft.com → Devices → [Device Name] → Device compliance" -ForegroundColor Gray
+```
+
+### 12.3 Update the README.md
+
+Update the status table at the bottom of `README.md` to replace "Not Started" with completed steps:
+
+```markdown
+| Phase | Status | Notes |
+|---|---|---|
+| Project Setup | ✅ Complete | Scope, scenario, and build plan defined |
+| Research & Planning | ✅ Complete | Licensing route confirmed (M365 Business Premium trial) |
+| M365 Trial Setup | ✅ Complete | Tenant, users, and groups created |
+| VM Build | ✅ Complete | Hyper-V Gen 2 VM with vTPM, Windows 11 installed |
+| Autopilot Registration | ✅ Complete | Hardware hash extracted and registered via Get-WindowsAutopilotInfo -Online |
+| Policy Configuration | ✅ Complete | Deployment profile, ESP, security baseline, compliance policy, update ring |
+| App Packaging & Deployment | ✅ Complete | 7-Zip packaged as Win32 .intunewin and deployed as Required |
+| End-to-End Test | ✅ Complete | Full Autopilot run successful — device enrolled, compliant, app installed |
+| Documentation | ✅ Complete | Screenshots, scripts, and walkthrough committed to repo |
+```
+
+### 12.4 Upload to GitHub
+
+On your host machine, using GitHub Desktop or Git in PowerShell:
+
+```powershell
+# Navigate to your local repo clone
+cd C:\path\to\it-support-portfolio
+
+# Stage all new files
+git add .
+
+# Commit with a descriptive message
+git commit -m "Complete Intune + Autopilot Lab: policies, app deployment, end-to-end test, screenshots"
+
+# Push to GitHub
+git push origin main
+```
+
+Or via GitHub Desktop: open the app, review the changes, write the commit message, and click **Commit to main** then **Push origin**.
+
+---
+
+## 13. Troubleshooting Reference
+
+Keep notes of every problem you hit and how you fixed it. This section is a template — add your actual issues as they occur.
+
+### 13.1 Common Issues and Fixes
+
+**Issue: Device does not redirect to Autopilot during OOBE — stays on region selection screen**
+
+Possible causes and fixes:
+1. **Hardware hash not yet synced** — Autopilot can take 15–30 minutes to process a new registration. Restart the VM and try again.
+2. **Device not added to the Autopilot-Devices group** — Check Entra ID → Groups → Autopilot-Devices → Members.
+3. **Deployment profile not assigned to the group** — Check the profile assignment in Intune.
+4. **VM has no internet connection** — Verify the VM network adapter is set to the External switch. Test by pressing Shift+F10 at OOBE and running `ping 8.8.8.8`.
+5. **vTPM not enabled** — Power off the VM, go to VM Settings → Security, check "Enable Trusted Platform Module", then start again.
+
+---
+
+**Issue: Get-WindowsAutopilotInfo -Online fails with authentication error**
+
+Fix: Use Option B (CSV export and manual import). Inside the VM at the PowerShell prompt:
+```powershell
+Get-WindowsAutopilotInfo -OutputFile C:\AutopilotHWID.csv
+```
+Then read the file content, copy it, create it on your host machine, and import via Intune admin centre.
+
+---
+
+**Issue: ESP gets stuck or times out**
+
+Fix steps:
+1. Press **Ctrl+Shift+Alt+F3** inside the VM console — this opens the MDM diagnostics page where you can view enrollment logs.
+2. Click **Collect logs** on the ESP screen (if the option appears).
+3. Common causes: app detection rule wrong (app isn't detected as installed, Intune keeps retrying), or a policy configuration error.
+4. Check the Intune **Device install status** for 7-Zip to see the error code.
+
+Common error codes:
+| Code | Meaning |
+|---|---|
+| 0x87D1041C | App not detected after install — detection rule is wrong |
+| 0x80070005 | Access denied — installer needs System context, not User |
+| 0x80070490 | Element not found — the .intunewin file path is wrong |
+| 0x80070643 | Fatal error during installation — the installer itself failed |
+
+---
+
+**Issue: Device shows as Non-Compliant after enrolment**
+
+Fix: BitLocker may not be encrypting automatically in a VM. To check:
+```powershell
+# Inside the VM, run as admin:
+manage-bde -status C:
+```
+If BitLocker is not encrypting, run:
+```powershell
+Enable-BitLocker -MountPoint "C:" -EncryptionMethod XtsAes256 -UsedSpaceOnly -TpmProtector
+```
+Then force an Intune sync and wait 10 minutes for compliance to update.
+
+---
+
+**Issue: `Install-Script -Name Get-WindowsAutopilotInfo` fails with "execution of scripts is disabled"**
+
+Fix:
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+```
+Then retry the `Install-Script` command.
+
+---
+
+**Issue: Win32 app packaging fails — IntuneWinAppUtil.exe exits immediately**
+
+Fix: Run it in a Command Prompt (not PowerShell) with quotes around paths that contain spaces:
+```cmd
+"C:\Tools\IntuneWinAppUtil.exe" -c "C:\Tools\7zip" -s "7z2301-x64.exe" -o "C:\Tools\output"
+```
+
+---
+
+**Issue: Hyper-V virtual machine won't start — "Virtual machine could not be started because the hypervisor is not running"**
+
+Fix:
+```powershell
+# Run in PowerShell as Administrator on the host
+bcdedit /set hypervisorlaunchtype auto
+```
+Restart the host machine. If it still fails, enter BIOS/UEFI and enable **Intel VT-x** or **AMD-V** (virtualisation must be enabled in firmware).
+
+---
+
+### 13.2 Your Troubleshooting Log
+
+Use this table to document every issue you actually hit during the lab:
+
+| # | Phase | What Happened | What I Tried | What Fixed It | Time Lost |
+|---|---|---|---|---|---|
+| 1 | | | | | |
+| 2 | | | | | |
+
+---
+
+## 14. Interview Talking Points
+
+This section maps your lab experience to common interview questions for 1st/2nd line IT support roles in the UK.
+
+---
+
+**"Tell me about your experience with Intune / endpoint management."**
+
+> "I've built a hands-on lab where I set up a complete Microsoft Intune environment from scratch, including Windows Autopilot for zero-touch device deployment. I registered devices using the hardware hash extraction tool, created deployment profiles, configured the Enrollment Status Page, applied security baselines, and deployed applications using the Win32 content prep tool. I also created compliance policies covering BitLocker, Defender, and password requirements, and mapped the non-compliance actions. I've documented the whole process, including the issues I hit and how I resolved them."
+
+---
+
+**"What is Windows Autopilot and how does it work?"**
+
+> "Autopilot is Microsoft's zero-touch deployment solution. When a device is powered on for the first time, it connects to the internet and checks its hardware hash against the Autopilot service. If the device is registered, instead of going through the standard Windows setup, it goes through a company-specific experience — applying branding, installing required apps, and joining Azure AD — without any IT technician needing to touch the device physically. The Enrollment Status Page blocks the user from using the device until everything is configured. It's commonly used for remote workers or when sending devices directly from the manufacturer to the end user."
+
+---
+
+**"What is the Enrollment Status Page and why is it important?"**
+
+> "The ESP is a progress screen shown during Autopilot provisioning. It blocks the user from accessing the desktop until all required apps and configuration profiles have been applied. This is important because if a user got to the desktop before, say, security policies were applied, they could have a window where their device doesn't meet company security standards. The ESP closes that window. It also shows a clear progress indicator so the user knows what's happening, and it can be configured to show a custom IT support message if something goes wrong."
+
+---
+
+**"How do you deploy software via Intune?"**
+
+> "For Win32 apps — standard .exe or .msi installers — you use the IntuneWinAppUtil tool to package the installer into a .intunewin format. You then create a Win32 app in Intune, specifying the install and uninstall command-line strings, the requirements (OS version, architecture), and a detection rule so Intune knows whether the app is already installed. The detection rule is important — if it's wrong, Intune will either reinstall the app every time or never detect it as installed. I used a file-based detection rule checking for the app's main executable. Apps are then assigned as Required (force-installed) or Available (user can install from Company Portal)."
+
+---
+
+**"What does a compliance policy do in Intune?"**
+
+> "A compliance policy defines the security baseline a device must meet. In my lab I configured it to require BitLocker encryption, Defender running with up-to-date definitions, a minimum OS build version, secure boot enabled, and a password policy. If a device fails any of those checks, Intune marks it as non-compliant. You can then configure what happens — in my setup, the device is immediately marked non-compliant, the user gets an email after one day, and after 30 days the device is retired. When compliance is combined with Conditional Access (Project 03), a non-compliant device also gets blocked from accessing Microsoft 365 services."
+
+---
+
+**"How would you troubleshoot a device that's not enrolling via Autopilot?"**
+
+> "I'd work through it systematically. First, check that the device's hardware hash is actually registered in Intune's Autopilot devices list and that the profile status shows Assigned — not Not assigned. Then check group membership: the device needs to be in the group the deployment profile is assigned to. If registration and assignment look right, I'd check network connectivity at OOBE using Shift+F10 to get a command prompt and pinging a known address. I'd also check the vTPM or physical TPM is enabled, since Autopilot and Windows 11 both require TPM 2.0. If the device gets through Autopilot but the ESP fails, I'd collect the MDM diagnostic logs using Ctrl+Shift+Alt+F3 and look for the specific app or policy that's failing."
+
+---
+
+**"What's the difference between a configuration profile and a compliance policy?"**
+
+> "A configuration profile actively pushes settings to the device — it tells Windows what to do: set the wallpaper to this, block the Microsoft Store, defer Windows Updates by 7 days. The device applies those settings regardless of its state. A compliance policy, on the other hand, checks whether the device meets certain requirements — does it have BitLocker on, is Defender running, is the OS up to date. It's read-only from a configuration perspective; it doesn't change settings, it just evaluates them. The two work together: configuration profiles set the state you want, and compliance policies verify that state is maintained."
+
+---
+
+*Last updated: June 2026*  
+*Author: Prides Maboh — IT Support Portfolio*  
+*Repository: github.com/PridesMaboh/it-support-portfolio*
