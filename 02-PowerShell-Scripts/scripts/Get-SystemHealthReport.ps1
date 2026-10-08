@@ -12,8 +12,8 @@
 
 .NOTES
     Author: Prides Fru Maboh
-    Purpose: IT Support Portfolio – Project 02 (PowerShell Scripting)
-    Tested on: Windows 11 22H2+
+    Purpose: IT Support Portfolio - Project 02 (PowerShell Scripting)
+    Target platform: Windows 11, PowerShell 5.1 (not yet tested; see the project README)
 #>
 
 #Requires -Version 5.1
@@ -49,7 +49,7 @@ function Get-SystemHealthReport {
 
     # --- RAM ---
     $totalRAM  = [math]::Round($cs.TotalPhysicalMemory / 1GB, 2)
-    $freeRAM   = [math]::Round($os.FreePhysicalMemory / 1MB / 1024, 2)
+    $freeRAM   = [math]::Round($os.FreePhysicalMemory / 1MB, 2)   # FreePhysicalMemory is reported in KB
     $usedRAM   = [math]::Round($totalRAM - $freeRAM, 2)
     $ramPct    = [math]::Round(($usedRAM / $totalRAM) * 100, 0)
 

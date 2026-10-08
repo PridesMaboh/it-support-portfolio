@@ -25,9 +25,9 @@
 
 .NOTES
     Author: Prides Fru Maboh
-    Purpose: IT Support Portfolio – Project 02 (PowerShell Scripting)
+    Purpose: IT Support Portfolio - Project 02 (PowerShell Scripting)
     Requires: Run as Administrator
-    Tested on: Windows 11 22H2+
+    Target platform: Windows 11, PowerShell 5.1 (not yet tested; see the project README)
 #>
 
 #Requires -Version 5.1
@@ -83,7 +83,7 @@ try {
     $user = [ADSI]"WinNT://$env:COMPUTERNAME/$Username,user"
     $user.PasswordExpired = 1
     $user.SetInfo()
-    Write-Host "  [OK] Password set to expire — user must change on first login." -ForegroundColor Green
+    Write-Host "  [OK] Password set to expire - user must change on first login." -ForegroundColor Green
 } catch {
     Write-Host "  [WARN] Could not force password change: $($_.Exception.Message)" -ForegroundColor Yellow
 }

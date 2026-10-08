@@ -15,8 +15,8 @@
 
 .NOTES
     Author: Prides Fru Maboh
-    Purpose: IT Support Portfolio – Project 02 (PowerShell Scripting)
-    Tested on: Windows 11 22H2+
+    Purpose: IT Support Portfolio - Project 02 (PowerShell Scripting)
+    Target platform: Windows 11, PowerShell 5.1 (not yet tested; see the project README)
 #>
 
 #Requires -Version 5.1
@@ -52,7 +52,7 @@ Write-Host "========================================`n" -ForegroundColor Cyan
 $gateway = (Get-NetIPConfiguration | Where-Object { $_.IPv4DefaultGateway } | Select-Object -First 1).IPv4DefaultGateway.NextHop
 Write-Host "Default Gateway: $(if ($gateway) { $gateway } else { 'Not found' })" -ForegroundColor Yellow
 
-$results = @{}
+$results = [ordered]@{}   # ordered so the summary prints in test order
 
 # 2. Ping gateway
 $results['Gateway'] = Test-Step "Default gateway ($gateway)" {

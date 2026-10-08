@@ -19,9 +19,9 @@
 
 .NOTES
     Author: Prides Fru Maboh
-    Purpose: IT Support Portfolio – Project 02 (PowerShell Scripting)
+    Purpose: IT Support Portfolio - Project 02 (PowerShell Scripting)
     Requires: Run as Administrator (Security log access)
-    Tested on: Windows 11 22H2+
+    Target platform: Windows 11, PowerShell 5.1 (not yet tested; see the project README)
 #>
 
 #Requires -Version 5.1

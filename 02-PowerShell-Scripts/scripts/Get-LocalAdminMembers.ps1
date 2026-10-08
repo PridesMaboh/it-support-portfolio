@@ -11,8 +11,8 @@
 
 .NOTES
     Author: Prides Fru Maboh
-    Purpose: IT Support Portfolio – Project 02 (PowerShell Scripting)
-    Tested on: Windows 11 22H2+
+    Purpose: IT Support Portfolio - Project 02 (PowerShell Scripting)
+    Target platform: Windows 11, PowerShell 5.1 (not yet tested; see the project README)
 #>
 
 #Requires -Version 5.1
@@ -42,7 +42,7 @@ try {
             $unexpected | ForEach-Object { Write-Host "  - $($_.Name)" -ForegroundColor Yellow }
         }
     } else {
-        Write-Host "No members found (unexpected — at least the built-in Administrator should appear)." -ForegroundColor Red
+        Write-Host "No members found (unexpected - at least the built-in Administrator should appear)." -ForegroundColor Red
     }
 } catch {
     Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
