@@ -1,7 +1,7 @@
 # Entra ID Conditional Access + MFA
 
 ## Project Goal
-Configure a realistic set of Conditional Access policies in Microsoft Entra ID (Azure AD) to enforce MFA, block legacy authentication, and protect admin accounts — demonstrating identity and security skills relevant to 2nd line and above roles.
+Configure a realistic set of Conditional Access policies in Microsoft Entra ID (Azure AD) to enforce MFA, block legacy authentication, and protect admin accounts – demonstrating identity and security skills relevant to 2nd line and above roles.
 
 ## Project Overview
 This project uses the same Microsoft 365 Business Premium trial tenant as Project 01 (Intune + Autopilot Lab). It simulates the identity security posture of a small-to-medium UK organisation migrating to modern authentication.
@@ -15,19 +15,19 @@ Identity and Conditional Access come up frequently in IT support interviews beca
 **Tenant:** Microsoft 365 Business Premium trial (same as Project 01)
 > Includes Entra ID P1, which is required for Conditional Access policies.
 
-**Test accounts configured:**
-- `admin@<tenant>.onmicrosoft.com` — Global Administrator
-- `user1@<tenant>.onmicrosoft.com` — Standard user (test target for policies)
-- `newstarter@<tenant>.onmicrosoft.com` — Simulates a recently onboarded employee
+**Test accounts (planned):**
+- `admin@<tenant>.onmicrosoft.com` – Global Administrator
+- `user1@<tenant>.onmicrosoft.com` – Standard user (test target for policies)
+- `newstarter@<tenant>.onmicrosoft.com` – Simulates a recently onboarded employee
 
-**Security groups:**
-- `CA-AllUsers` — all licensed users (policy target)
-- `CA-Admins` — admin accounts (stricter policy target)
-- `CA-Exclude` — break-glass / exclusion group (never locked out)
+**Security groups (planned):**
+- `CA-AllUsers` – all licensed users (policy target)
+- `CA-Admins` – admin accounts (stricter policy target)
+- `CA-Exclude` – break-glass / exclusion group (never locked out)
 
 ---
 
-## Policies Configured
+## Policies Designed
 
 ### Policy 1: Require MFA for All Users
 **What it does:** Enforces MFA registration and sign-in for every user signing into any cloud app.
@@ -38,12 +38,12 @@ Identity and Conditional Access come up frequently in IT support interviews beca
 - Conditions: None (applies everywhere)
 - Grant: Require multi-factor authentication
 
-**Why it matters:** The single most impactful policy for reducing account compromise. Required for Cyber Essentials Plus and many UK public sector frameworks.
+**Why it matters:** MFA is the most effective single control against account compromise, and the UK Cyber Essentials scheme now requires MFA on cloud services.
 
 ---
 
 ### Policy 2: Block Legacy Authentication
-**What it does:** Blocks sign-in attempts using protocols that don't support MFA — IMAP, POP3, SMTP AUTH, older Office clients.
+**What it does:** Blocks sign-in attempts using protocols that don't support MFA – IMAP, POP3, SMTP AUTH, older Office clients.
 
 **Settings:**
 - Users: All users (exclude `CA-Exclude`)
@@ -51,7 +51,7 @@ Identity and Conditional Access come up frequently in IT support interviews beca
 - Conditions: Client apps = Exchange ActiveSync + Other clients
 - Grant: Block access
 
-**Why it matters:** Over 97% of password spray attacks use legacy auth. Blocking it is a quick security win and is standard practice in modern M365 tenants.
+**Why it matters:** Microsoft reports that the large majority of password spray attacks use legacy authentication, because those protocols cannot prompt for MFA. Blocking them is a quick security win and standard practice in modern M365 tenants.
 
 ---
 
@@ -64,14 +64,14 @@ Identity and Conditional Access come up frequently in IT support interviews beca
 - Conditions: None
 - Grant: Require MFA **AND** require compliant device (Intune compliance policy from Project 01)
 
-**Why it matters:** Admin accounts are the highest-value target. This policy means compromising a password alone is not sufficient — the attacker also needs a registered compliant device.
+**Why it matters:** Admin accounts are the highest-value target. This policy means compromising a password alone is not sufficient – the attacker also needs a registered compliant device.
 
 ---
 
 ### Policy 4: Sign-in Risk Policy (Entra ID Protection)
 **What it does:** Automatically requires MFA or blocks access when Entra ID detects a risky sign-in (e.g., sign-in from an unusual location or anonymous IP).
 
-> **Licence note:** Full risk-based Conditional Access requires **Entra ID P2** (Microsoft Entra ID Protection). The Business Premium trial used in this lab includes P1 only. Policy 4 is documented here as a design exercise and interview reference — it cannot be fully configured in the P1 trial. To test this in practice, an Entra ID P2 or Microsoft 365 E5 trial would be required.
+> **Licence note:** Full risk-based Conditional Access requires **Entra ID P2** (Microsoft Entra ID Protection). The Business Premium trial used in this lab includes P1 only. Policy 4 is documented here as a design exercise and interview reference – it cannot be fully configured in the P1 trial. To test this in practice, an Entra ID P2 or Microsoft 365 E5 trial would be required.
 
 **Settings (planned):**
 - Users: All users (exclude `CA-Exclude`)
@@ -79,7 +79,7 @@ Identity and Conditional Access come up frequently in IT support interviews beca
 - Conditions: Sign-in risk = Medium or High
 - Grant: Require MFA (Medium risk) / Block (High risk)
 
-**Why it matters:** Demonstrates understanding of risk-based authentication — a step beyond basic Conditional Access. Shows ability to use intelligence-driven security controls, and shows awareness of Microsoft's licence tiers.
+**Why it matters:** Demonstrates understanding of risk-based authentication – a step beyond basic Conditional Access. Shows ability to use intelligence-driven security controls, and shows awareness of Microsoft's licence tiers.
 
 ---
 
@@ -91,7 +91,7 @@ Identity and Conditional Access come up frequently in IT support interviews beca
    - Assign test users to appropriate groups
 
 2. **Enable Security Defaults: OFF**
-   - Security Defaults conflict with Conditional Access — must be disabled first
+   - Security Defaults conflict with Conditional Access – must be disabled first
    - Document this step clearly (common source of confusion)
 
 3. **Create Policy 1: Require MFA for All Users**
@@ -108,7 +108,7 @@ Identity and Conditional Access come up frequently in IT support interviews beca
    - Reference the Intune compliance policy from Project 01
    - Test by signing into Intune admin center as an admin user
 
-6. **Policy 4: Sign-in Risk (requires Entra ID P2 — design exercise only)**
+6. **Policy 4: Sign-in Risk (requires Entra ID P2 – design exercise only)**
    - Entra ID Protection is not included in the Business Premium P1 trial
    - Document the intended policy configuration for reference and interview preparation
    - If a P2 trial is available: enable Entra ID Protection, configure sign-in risk policy, use the Tor Browser to simulate a risky sign-in for testing
@@ -123,12 +123,12 @@ Identity and Conditional Access come up frequently in IT support interviews beca
 
 - [ ] Security Defaults disabled (Entra ID > Properties)
 - [ ] Security groups created and populated
-- [ ] Policy 1: MFA for All Users — configuration screenshot
+- [ ] Policy 1: MFA for All Users – configuration screenshot
 - [ ] Policy 1: Sign-in log showing MFA prompt applied
-- [ ] Policy 2: Block Legacy Auth — configuration screenshot
+- [ ] Policy 2: Block Legacy Auth – configuration screenshot
 - [ ] Policy 2: Block confirmed in sign-in logs (failure reason = "blocked by CA policy")
 - [ ] Policy 3: Admin policy configuration screenshot
-- [ ] Policy 4: Design documentation (P2 required for live configuration — see licence note above)
+- [ ] Policy 4: Design documentation (P2 required for live configuration – see licence note above)
 - [ ] Entra ID Protection dashboard screenshot (if P2 trial available)
 
 Store screenshots in `assets/03-entra-ca/` and reference them inline in this README.
@@ -141,9 +141,9 @@ Store screenshots in `assets/03-entra-ca/` and reference them inline in this REA
 |-------|-------------|
 | What is Conditional Access? | Policy engine that evaluates conditions (who, what app, what device, what risk) and grants/blocks access |
 | Why block legacy auth? | Legacy protocols can't prompt for MFA, so attackers use them to bypass it |
-| What is a break-glass account? | An emergency admin account excluded from all CA policies — used if you lock yourself out |
-| Report-Only mode | Tests a policy's impact without enforcing it — always use before enabling new policies |
-| MFA methods | Authenticator app push (most secure), SMS (least secure), FIDO2 key (phishing-resistant) |
+| What is a break-glass account? | An emergency admin account excluded from all CA policies – used if you lock yourself out |
+| Report-Only mode | Tests a policy's impact without enforcing it – always use before enabling new policies |
+| MFA methods | FIDO2 security keys and passkeys are phishing-resistant and the strongest; Authenticator app with number matching is the common standard; SMS is the weakest |
 | Named Locations | Can use IP ranges or country to restrict where sign-ins are allowed from |
 
 ---
