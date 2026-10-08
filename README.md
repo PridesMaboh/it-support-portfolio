@@ -1,46 +1,34 @@
 # IT Support Portfolio
 
-**Name:** Prides Maboh  
-**Location:** Ashford, Kent, UK  
-**Target Roles:** IT Support Analyst | Desktop Support Engineer | 1st / 2nd Line Support
+**Prides Maboh** | Ashford, Kent, UK | Open to relocation across the UK
+**Target roles:** 1st / 2nd Line Support, Service Desk Analyst, Desktop Support
 
 ## About This Portfolio
 
-This repository contains practical, hands-on projects I have built to strengthen my skills in modern workplace technologies. My goal is to demonstrate real technical ability in Microsoft 365 endpoint management, automation, identity, and security — skills that are highly relevant for IT Support and Desktop Support roles in the UK.
+I have 7+ years of combined IT support experience in Cameroon, including Active Directory and Group Policy administration on a Windows Server 2012 domain, DNS and DHCP troubleshooting, device provisioning, and first and second line Microsoft 365 support. This repository is where I am building the cloud-managed side of that skill set: Intune, Autopilot and Entra ID.
 
-I am an IT Support professional with 7+ years of hands-on helpdesk experience across multi-site environments. I hold CompTIA Secure Infrastructure Specialist (A+, Network+, Security+) and ITIL 4 Foundation certifications. I am actively building practical skills through projects to support my applications for sponsored IT roles.
+The work here is in progress and I record it as it happens, including the mistakes. Each project shows its real status.
+
+**Certifications:** CompTIA A+, Network+ and Security+ (SY0-701), CompTIA CIOS and CSIS, ITIL Foundation Version 5, Microsoft AZ-900 and PL-900. [Verify on Credly](https://www.credly.com/users/prides-tumasang-fru-maboh)
 
 ## Projects
 
-| Project                              | Focus Area                          | Status        |
-|--------------------------------------|-------------------------------------|---------------|
-| 01 - Intune + Autopilot Lab          | Endpoint Management & Deployment    | In Progress   |
-| 02 - PowerShell Scripting            | Automation & Troubleshooting        | In Progress   |
-| 03 - Entra ID Conditional Access + MFA | Identity & Security               | In Progress   |
-| 04 - JAMF / macOS Fundamentals       | Apple Device Management             | Optional      |
+| Project | Focus | Status |
+|---|---|---|
+| [01 – Intune + Autopilot Lab](01-Intune-Autopilot-Lab/) | Endpoint management and zero-touch deployment | In progress: Hyper-V VM built and checkpointed, Autopilot registration next |
+| [02 – PowerShell Scripts](02-PowerShell-Scripts/) | Support diagnostics and automation | Scripts written; testing in my lab has not started yet |
+| [03 – Entra ID Conditional Access + MFA](03-Entra-ID-Conditional-Access/) | Identity and access security | Designed; build planned in the same trial tenant as Project 01 |
+| [04 – Jamf / macOS Fundamentals](04-JAMF-macOS-Basics/) | Apple device management | Optional; concepts mapped, not started |
 
-## Why This Portfolio?
+## Lab Setup
 
-- Bridges the gap between certifications and real-world technical ability
-- Shows initiative and continuous learning
-- Demonstrates practical skills relevant to current UK IT Support roles
-- Helps me prepare for technical discussions in interviews
-
-## Tools & Technologies
-
-- Microsoft Intune & Autopilot
-- Microsoft Entra ID (Azure AD)
-- PowerShell
-- Windows 11 & macOS
-- ITIL-aligned processes
+- Host: Windows desktop running Hyper-V
+- Test device: Windows 11 25H2 Generation 2 VM with Secure Boot and a virtual TPM
+- Tenant (planned): Microsoft 365 Business Premium 30-day trial, which includes Intune and Entra ID P1
 
 ## Contact
 
 - **LinkedIn:** [linkedin.com/in/prides-tumasang-fru-maboh](https://www.linkedin.com/in/prides-tumasang-fru-maboh)
-- **Credly:** [credly.com/users/prides-tumasang-fru-maboh](https://www.credly.com/users/prides-tumasang-fru-maboh)
 - **Email:** fruprides@outlook.com
-- **Phone:** +44 7487 566116
 
----
-
-*Actively seeking IT Support / Desktop Support opportunities in the UK (open to relocation).*
+*I hold a Skilled Worker visa and will need sponsorship for a change of employer.*
