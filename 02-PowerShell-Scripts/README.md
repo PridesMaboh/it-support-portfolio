@@ -1,7 +1,9 @@
 # PowerShell Scripting for IT Support
 
+> **Status:** These seven scripts are written but not yet tested. I am working through them one at a time in my Hyper-V lab (see [Project 01](../01-Intune-Autopilot-Lab/)), and each one will get a screenshot of real output below once I have run it and can explain every line. Until then, treat them as untested.
+
 ## Project Goal
-Build a library of practical PowerShell scripts that automate real IT support tasks — system health checks, user account management, software reporting, and endpoint diagnostics. Each script is documented with a real-world use case and expected output.
+Build a library of practical PowerShell scripts that automate real IT support tasks – system health checks, user account management, software reporting, and endpoint diagnostics. Each script is documented with a real-world use case and expected output.
 
 ## Why PowerShell Matters for IT Support
 Most 2nd line and deskside support roles expect engineers to read, modify, and run PowerShell scripts for:
@@ -59,7 +61,7 @@ Most 2nd line and deskside support roles expect engineers to read, modify, and r
 
 ### `Test-NetworkConnectivity.ps1`
 
-**Use case:** Network troubleshooting — quickly test whether a connectivity issue is at DNS, gateway, or internet level, rather than just running a single ping.
+**Use case:** Network troubleshooting – quickly test whether a connectivity issue is at DNS, gateway, or internet level, rather than just running a single ping.
 
 **Tests performed:**
 1. Local gateway reachability (ping)
@@ -67,7 +69,7 @@ Most 2nd line and deskside support roles expect engineers to read, modify, and r
 3. Internet connectivity (HTTPS test to a reliable endpoint)
 4. Internal DNS (resolves internal hostname if specified)
 
-**Real-world value:** Structured output means you can rule out each layer systematically — useful for documenting what was tested and when.
+**Real-world value:** Structured output means you can rule out each layer systematically – useful for documenting what was tested and when.
 
 ---
 
@@ -81,7 +83,7 @@ Most 2nd line and deskside support roles expect engineers to read, modify, and r
 
 ### `Get-FailedLoginEvents.ps1`
 
-**Use case:** A user says "my account keeps getting locked" — this script checks the local Security log for Event ID 4625 (failed logon) and 4740 (account lockout) to identify the source.
+**Use case:** A user says "my account keeps getting locked" – this script checks the local Security log for Event ID 4625 (failed logon) and 4740 (account lockout) to identify the source.
 
 **Output includes:**
 - Timestamp, account name, logon type, source IP/workstation
@@ -93,7 +95,7 @@ Most 2nd line and deskside support roles expect engineers to read, modify, and r
 
 ### `Set-NewUserEnvironment.ps1`
 
-**Use case:** Setting up a new local user account on a machine — either for a new starter or for a temporary/test account during troubleshooting.
+**Use case:** Setting up a new local user account on a machine – either for a new starter or for a temporary/test account during troubleshooting.
 
 **Actions:**
 - Creates a local user with a specified username
@@ -101,7 +103,7 @@ Most 2nd line and deskside support roles expect engineers to read, modify, and r
 - Optionally adds to a local group (e.g., Remote Desktop Users)
 - Outputs confirmation of each step
 
-**Real-world value:** Demonstrates understanding of user management without needing AD — useful in SME environments where not everything is domain-joined.
+**Real-world value:** Demonstrates understanding of user management without needing AD – useful in SME environments where not everything is domain-joined.
 
 ---
 
@@ -113,7 +115,7 @@ Most 2nd line and deskside support roles expect engineers to read, modify, and r
 - Drive letter, total size, used space, free space (GB and %)
 - Colour-coded warning if below threshold (red in console)
 
-**Real-world value:** Proactive monitoring skill — shows you think beyond reactive ticket work.
+**Real-world value:** Proactive monitoring skill – shows you think beyond reactive ticket work.
 
 ---
 
@@ -123,7 +125,7 @@ Most 2nd line and deskside support roles expect engineers to read, modify, and r
 - [ ] Screenshot of `Get-SystemHealthReport.ps1` output in a PowerShell console
 - [ ] Screenshot of `Get-InstalledSoftware.ps1` output (table view)
 - [ ] Screenshot of `Test-NetworkConnectivity.ps1` showing pass/fail on each test
-- [ ] Screenshot of `Get-FailedLoginEvents.ps1` output (even with no events — shows it ran)
+- [ ] Screenshot of `Get-FailedLoginEvents.ps1` output (even with no events – shows it ran)
 - [ ] Screenshot of `Set-NewUserEnvironment.ps1` creating a test user
 - [ ] CSV export example from at least one script
 
@@ -145,8 +147,8 @@ Store screenshots in `assets/02-powershell/` and link them inline in this README
 | Phase | Status | Notes |
 |-------|--------|-------|
 | Script design & use cases | Complete | All 7 scripts planned with documented rationale |
-| Script writing | Complete | All scripts written and saved in `scripts/` |
-| Testing | In Progress | Running on Windows 11 test machine |
+| Script writing | Complete | All seven scripts saved in `scripts/` |
+| Testing | Not Started | Will run on the Windows 11 VM from Project 01 |
 | Evidence capture | Not Started | Screenshots to be added during testing |
 | Write-up | Not Started | Inline screenshots and notes to follow testing |
 
