@@ -1,10 +1,10 @@
 # JAMF / macOS Fundamentals
 
 ## Project Goal
-Understand the core concepts of Apple device management using JAMF Pro — demonstrating awareness of macOS endpoint management alongside the Microsoft-focused skills in Projects 01–03. This broadens the portfolio to cover mixed-OS environments, which is common in UK tech companies and agencies.
+Understand the core concepts of Apple device management using JAMF Pro – demonstrating awareness of macOS endpoint management alongside the Microsoft-focused skills in Projects 01–03. This broadens the portfolio to cover mixed-OS environments, which is common in UK tech companies and agencies.
 
 ## Why This Project?
-Many IT support roles in London and the South East — particularly in media, fintech, legal, and creative industries — run mixed Mac/Windows estates. Being able to speak to JAMF, MDM profiles, and macOS management makes a candidate stand out from Windows-only applicants.
+Many IT support roles in London and the South East – particularly in media, fintech, legal, and creative industries – run mixed Mac/Windows estates. Being able to speak to JAMF, MDM profiles, and macOS management makes a candidate stand out from Windows-only applicants.
 
 ---
 
@@ -25,7 +25,7 @@ Many IT support roles in London and the South East — particularly in media, fi
 ### 1. Enrolling a Mac into JAMF
 **Method:** Automated Device Enrolment (ADE) via Apple Business Manager, OR manual enrolment via the JAMF enrolment URL.
 
-For this lab, manual enrolment is used (ADE requires Apple Business Manager, which requires a registered business — not needed for a portfolio lab).
+For this lab, manual enrolment is used (ADE requires Apple Business Manager, which requires a registered business – not needed for a portfolio lab).
 
 **Enrolment steps:**
 1. Log into JAMF Pro → Computers → Enrolment
@@ -44,14 +44,14 @@ Once enrolled, JAMF automatically collects:
 
 **Key JAMF Pro views to explore:**
 - Computers → All Computers → select a device → Hardware, Storage, Applications tabs
-- Smart Groups — dynamic groups based on criteria (e.g., "all Macs on macOS < 14.0")
+- Smart Groups – dynamic groups based on criteria (e.g., "all Macs on macOS < 14.0")
 
 ---
 
 ### 3. Configuration Profiles (Equivalent to Intune Config Profiles)
 JAMF uses configuration profiles (`.mobileconfig` files) to push settings to Macs. These are equivalent to Intune configuration profiles for Windows.
 
-**Profiles built in this lab:**
+**Profiles planned for this lab:**
 
 | Profile | Settings Applied |
 |---------|-----------------|
@@ -67,9 +67,9 @@ JAMF uses configuration profiles (`.mobileconfig` files) to push settings to Mac
 ---
 
 ### 4. Policies (Software Deployment & Scripts)
-JAMF Policies are the equivalent of Intune Win32 apps or PowerShell scripts — they run actions on enrolled Macs.
+JAMF Policies are the equivalent of Intune Win32 apps or PowerShell scripts – they run actions on enrolled Macs.
 
-**Policies built in this lab:**
+**Policies planned for this lab:**
 
 | Policy | Trigger | Action |
 |--------|---------|--------|
@@ -119,11 +119,11 @@ Store screenshots in `assets/04-jamf-macos/`
 
 | Topic | What to Know |
 |-------|-------------|
-| What is JAMF Pro? | Enterprise Apple device management platform; the leading MDM for Mac in UK enterprise |
+| What is JAMF Pro? | Enterprise Apple device management platform; one of the most widely used MDM platforms for Mac in enterprise |
 | MDM profile | A signed XML file (`.mobileconfig`) that applies settings to a Mac via the MDM framework |
-| Smart Groups | Dynamic device groups in JAMF based on hardware/software criteria — auto-update as devices change |
+| Smart Groups | Dynamic device groups in JAMF based on hardware/software criteria – auto-update as devices change |
 | JAMF Connect | Integrates JAMF with Entra ID for SSO and account provisioning on Macs (replaces directory binding) |
-| ADE vs manual | ADE (via Apple Business Manager) is the enterprise standard — ties device to org before first boot |
+| ADE vs manual | ADE (via Apple Business Manager) is the enterprise standard – ties device to org before first boot |
 | Package deployment | JAMF uses `.pkg` files for software; can use Composer or AutoPkg to build them |
 
 ---
